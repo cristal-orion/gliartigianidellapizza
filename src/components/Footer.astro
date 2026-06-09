@@ -1,0 +1,164 @@
+---
+---
+<footer class="footer" id="contatti">
+  <div class="footer__pattern" aria-hidden="true"></div>
+
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <img src="/images/brand/logo-red.png" alt="Gli Artigiani" class="footer__logo" />
+      <p class="footer__tag">Forme · Estro · Sapienza</p>
+    </div>
+
+    <div class="footer__cols">
+      <div class="footer__col">
+        <h4>Dove siamo</h4>
+        <p>
+          <a href="https://www.google.com/maps/search/?api=1&query=Via+Santa+Rita+da+Cascia+13+80014+Giugliano+in+Campania+NA" target="_blank" rel="noopener">
+            Via Santa Rita da Cascia, 13<br />80014 Giugliano in Campania (NA)
+          </a>
+        </p>
+      </div>
+      <div class="footer__col">
+        <h4>Orari</h4>
+        <ul class="footer__hours">
+          <li><span>Lunedì</span><span>19:00–00:00</span></li>
+          <li class="is-closed"><span>Martedì</span><span>Chiuso</span></li>
+          <li><span>Mercoledì</span><span>19:00–00:00</span></li>
+          <li><span>Giovedì</span><span>19:00–00:00</span></li>
+          <li><span>Venerdì</span><span>12:30–15:00 · 19:00–00:00</span></li>
+          <li><span>Sabato</span><span>12:30–15:30 · 19:00–00:00</span></li>
+          <li><span>Domenica</span><span>19:00–00:00</span></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Contatti</h4>
+        <p>
+          <a href="tel:+390815061549">081 506 1549</a>
+        </p>
+        <div class="footer__social">
+          <a href="#" aria-label="Instagram">Instagram</a>
+          <a href="#" aria-label="Facebook">Facebook</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <span>© 2026 Gli Artigiani. Tutti i diritti riservati.</span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    position: relative;
+    background: var(--black);
+    padding: clamp(3.5rem, 8vw, 6rem) clamp(1.2rem, 5vw, 4rem) 2rem;
+    overflow: hidden;
+    border-top: 1px solid rgba(232, 213, 188, 0.1);
+  }
+  .footer__pattern {
+    position: absolute;
+    inset: 0;
+    background: url('/images/brand/pattern-primary.jpg') center/auto 100% repeat-x;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  .footer__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: clamp(2rem, 5vw, 5rem);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .footer__logo {
+    height: 42px;
+    margin-bottom: 1rem;
+  }
+  .footer__tag {
+    color: var(--cream);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+  }
+  .footer__cols {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    gap: 2rem;
+  }
+  .footer__col h4 {
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.78rem;
+    margin-bottom: 0.9rem;
+  }
+  .footer__col p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+    font-size: 0.92rem;
+  }
+  .footer__col a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.25s ease;
+  }
+  .footer__col a:hover { color: var(--cream); }
+  .footer__hours {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .footer__hours li {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    font-size: 0.86rem;
+    color: rgba(255, 255, 255, 0.72);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 0.4rem;
+  }
+  .footer__hours li span:first-child {
+    color: var(--cream);
+    white-space: nowrap;
+  }
+  .footer__hours li span:last-child {
+    text-align: right;
+  }
+  .footer__hours li.is-closed span:last-child {
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+  }
+  .footer__social {
+    display: flex;
+    gap: 1.2rem;
+    margin-top: 1.1rem;
+  }
+  .footer__social a {
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cream);
+  }
+  .footer__bottom {
+    position: relative;
+    max-width: 1200px;
+    margin: 3rem auto 0;
+    padding-top: 1.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.78rem;
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 760px) {
+    .footer__inner { grid-template-columns: 1fr; }
+    .footer__cols { grid-template-columns: 1fr 1fr; }
+  }
+</style>

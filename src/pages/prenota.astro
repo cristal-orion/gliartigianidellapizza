@@ -1,0 +1,124 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+// Quando il sottodominio del WordPress (Amelia) sarà attivo,
+// basta cambiare questo URL — es. https://prenota.gliartigianipizzeria.it/prenota/
+const BOOKING_URL = 'https://gliartigianipizzeria.it/prenota/';
+---
+<Layout title="Prenota un tavolo — Gli Artigiani">
+  <Nav />
+
+  <section class="prenotahero">
+    <div class="prenotahero__pattern" aria-hidden="true"></div>
+    <span class="section-tag">Forme · Estro · Sapienza</span>
+    <h1 class="prenotahero__title">Prenota<br /><em>un tavolo</em></h1>
+    <p class="prenotahero__sub">
+      Scegli data, orario e numero di coperti. Ti aspettiamo per
+      raccontarti la pizza, uno spicchio alla volta.
+    </p>
+  </section>
+
+  <section class="booking">
+    <div class="booking__frame reveal">
+      <iframe
+        src={BOOKING_URL}
+        title="Prenotazione tavolo Gli Artigiani"
+        loading="lazy"
+      ></iframe>
+    </div>
+    <p class="booking__fallback">
+      Problemi con il modulo?
+      <a href={BOOKING_URL} target="_blank" rel="noopener">Apri la prenotazione in una nuova scheda</a>
+      oppure chiamaci allo <a href="tel:+39334565789">+39 334 565789</a>.
+    </p>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .section-tag {
+    display: inline-block;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+  }
+  .prenotahero {
+    position: relative;
+    text-align: center;
+    padding: clamp(8rem, 18vw, 12rem) clamp(1.2rem, 5vw, 4rem) clamp(2rem, 5vw, 4rem);
+    overflow: hidden;
+  }
+  .prenotahero__pattern {
+    position: absolute;
+    inset: 0;
+    background: url('/images/brand/pattern-primary.jpg') center/cover;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+  .prenotahero__title {
+    position: relative;
+    font-family: var(--font-brand);
+    font-size: clamp(3rem, 11vw, 8rem);
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 0.85;
+    margin-bottom: 1.4rem;
+  }
+  .prenotahero__title em { color: var(--red); font-style: italic; }
+  .prenotahero__sub {
+    position: relative;
+    max-width: 480px;
+    margin: 0 auto;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.7;
+    font-size: 1.05rem;
+  }
+
+  .booking {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 clamp(1.2rem, 5vw, 4rem) clamp(4rem, 10vw, 7rem);
+  }
+  .booking__frame {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+    border: 1px solid rgba(232,213,188,0.12);
+  }
+  .booking__frame iframe {
+    display: block;
+    width: 100%;
+    height: 820px;
+    border: none;
+  }
+  .booking__fallback {
+    text-align: center;
+    margin-top: 1.6rem;
+    color: rgba(255,255,255,0.55);
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+  .booking__fallback a {
+    color: var(--cream);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .booking__fallback a:hover { color: var(--red); }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) {
+    gsap.from('.prenotahero__title', { y: 70, opacity: 0, duration: 1, ease: 'power3.out' });
+    gsap.from('.prenotahero__sub', { y: 30, opacity: 0, duration: 0.8, delay: 0.25, ease: 'power3.out' });
+    gsap.from('.booking__frame', { y: 50, opacity: 0, duration: 1, delay: 0.3, ease: 'power3.out' });
+  }
+</script>

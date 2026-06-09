@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.astro/
+
+# lockfile NON committato (vedi regole Coolify: npm install fresco nel Dockerfile)
+package-lock.json
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/
+
+# env
+.env
+.env.*

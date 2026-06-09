@@ -1,0 +1,717 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+---
+<Layout>
+  <Nav />
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="hero__media" aria-hidden="true">
+      <video
+        class="hero__video"
+        id="heroVideo"
+        muted
+        loop
+        playsinline
+        preload="none"
+        poster="/video/intro-poster.jpg"
+      ></video>
+      <div class="hero__pattern"></div>
+      <span class="hero__ghost">ARTIGIANI</span>
+    </div>
+
+    <div class="hero__content">
+      <img src="/images/brand/logo-white.png" alt="Gli Artigiani" class="hero__logo" />
+      <p class="hero__sub">
+        Quei gesti iniziali che, anche se semplici,
+        contengono già l'essenza del tutto.
+      </p>
+
+      <div class="hero__actions">
+        <a href="/menu-artigiani.pdf" target="_blank" rel="noopener" class="btn btn--primary">
+          <span>Scopri il Menù</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="/prenota" class="btn btn--ghost">Prenota un tavolo</a>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ============ MANIFESTO / NASTRO ============ -->
+  <section class="manifesto">
+    <div class="manifesto__ribbon" aria-hidden="true"></div>
+    <div class="manifesto__inner">
+      <span class="section-tag section-tag--center">Le Artigianali</span>
+      <p class="manifesto__text">
+        Ogni pizza racconta la nostra storia, fatta di
+        <em>mani, passione e&nbsp;innovazione.</em>
+      </p>
+      <div class="manifesto__zigzag" aria-hidden="true">
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--down" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--up" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--down" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--up" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--down" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--up" />
+        <img src="/images/brand/chevron.png" alt="" class="chev chev--down" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STORIA / HAND-STORIES ============ -->
+  <section class="story" id="storia">
+    <div class="story__intro">
+      <span class="section-tag">Hand-Stories</span>
+      <p class="story__lead">
+        La pizza, fedele compagna del mio viaggio nella vita, ha segnato
+        il mio percorso fin dai primi passi e continua a farlo,
+        contribuendo alla mia crescita personale e professionale.
+      </p>
+    </div>
+
+    <div class="story__chapters">
+      <article class="chapter chapter--text">
+        <p>
+          Il mio ingresso nel mondo della ristorazione è avvenuto nel
+          ristorante di mia zia, ma inizialmente nel ruolo di cameriere.
+        </p>
+        <p>
+          La passione per la pizza, però, mi bruciava dentro, spingendomi
+          irresistibilmente dietro al bancone. Così, ho fatto il mio ingresso
+          in una pizzeria d'asporto, situata proprio qui accanto, che mia zia
+          aveva acquisito.
+        </p>
+        <p>
+          Con il tempo e seguendo con orgoglio la mia ambizione, sono riuscito
+          a diventare il proprietario di quella pizzeria. Questo passo ha
+          comportato fatica, sacrifici e rinunce, ma sentivo profondamente che
+          era la scelta giusta per la mia personalità e la mia dedizione.
+        </p>
+      </article>
+
+      <article class="chapter">
+        <h3 class="chapter__title">Arte</h3>
+        <p class="chapter__text">
+          Da allora, ho continuato a perfezionare la mia arte, soddisfacendo
+          sempre di più la clientela e coltivando la mia passione.
+        </p>
+      </article>
+
+      <article class="chapter">
+        <h3 class="chapter__title">Un nuovo<br /><em>capitolo</em></h3>
+        <p class="chapter__text">
+          Oggi, ci troviamo qui, ad un nuovo capitolo di questo mio viaggio
+          culinario: l'apertura di una sala con posti a sedere per offrire ai
+          miei cari clienti un'esperienza più intima.
+        </p>
+      </article>
+
+      <article class="chapter">
+        <h3 class="chapter__title">Offrire e<br /><em>non servire</em></h3>
+        <p class="chapter__text">
+          «Servire» non è esattamente la parola giusta; preferisco farli
+          partecipi del mio entusiasmo nel percorrere la strada della vita
+          attraverso la pizza, spiegando loro la complessità e la bellezza
+          nascosta dietro a un semplice disco di acqua e farina, impreziosito
+          dai prodotti straordinari della nostra Italia.
+        </p>
+      </article>
+    </div>
+
+    <div class="story__signrow">
+      <img src="/images/brand/icon-a.png" alt="" class="story__mark" aria-hidden="true" />
+      <img src="/images/brand/firma-gianluigi.png" alt="Firma di Gianluigi" class="story__sign" />
+    </div>
+  </section>
+
+  <!-- ============ FORME DI CIBO (decorativo) ============ -->
+  <div class="formerow">
+    <img src="/images/brand/forma-cibo-1.png" alt="Spicchio di pizza nella forma a triangolo" class="formerow__shape" loading="lazy" />
+    <img src="/images/brand/forma-cibo-2.png" alt="Dettaglio del piatto nella forma circolare" class="formerow__shape" loading="lazy" />
+    <img src="/images/brand/forma-cibo-3.png" alt="Padellino nella forma ad arco" class="formerow__shape" loading="lazy" />
+    <img src="/images/brand/forma-cibo-4.png" alt="Crocchette nella forma a strisce" class="formerow__shape" loading="lazy" />
+  </div>
+
+  <!-- ============ SEGNI / FILOSOFIA ============ -->
+  <section class="segni" id="segni">
+    <div class="segni__inner">
+      <span class="section-tag section-tag--center">Segni Primari</span>
+      <h2 class="segni__title">Forme · Estro · Sapienza</h2>
+      <div class="segni__cards">
+        <article class="card">
+          <img src="/images/brand/forma-triangolo.png" alt="" class="card__shape" aria-hidden="true" />
+          <h3>Forme</h3>
+          <p>La geometria dell'impasto, la cura del gesto. Ogni pizza nasce da una forma pensata, mai casuale.</p>
+        </article>
+        <article class="card">
+          <img src="/images/brand/forma-goccia.png" alt="" class="card__shape" aria-hidden="true" />
+          <h3>Estro</h3>
+          <p>L'inventiva nell'accostare sapori inaspettati. Abbinamenti che raccontano una storia in ogni spicchio.</p>
+        </article>
+        <article class="card">
+          <img src="/images/brand/forma-strisce.png" alt="" class="card__shape" aria-hidden="true" />
+          <h3>Sapienza</h3>
+          <p>Anni di mani in pasta, lievitazioni lente e materie prime scelte. Il sapere artigiano dietro ogni morso.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY CIBO ============ -->
+  <section class="gallery" id="gallery">
+    <div class="gallery__head">
+      <span class="section-tag">Le nostre creazioni</span>
+      <h2 class="gallery__title">Materia prima,<br /><em>forma e gusto</em></h2>
+    </div>
+    <div class="gallery__grid">
+      <figure class="gallery__item">
+        <img src="/images/food/tartufo.jpg" alt="Tartufo fresco grattugiato sulla pizza" loading="lazy" />
+      </figure>
+      <figure class="gallery__item">
+        <img src="/images/food/pizza-zucca.jpg" alt="Pizza con crema di zucca, guanciale e tartufo" loading="lazy" />
+      </figure>
+      <figure class="gallery__item">
+        <img src="/images/food/crocchetta.jpg" alt="Crocchetta con culatello e crema" loading="lazy" />
+      </figure>
+      <figure class="gallery__item">
+        <img src="/images/food/montanara.jpg" alt="Montanara con pomodoro e stracciata" loading="lazy" />
+      </figure>
+      <figure class="gallery__item">
+        <img src="/images/food/padellini.jpg" alt="Patate al tartufo in padellino e pizza" loading="lazy" />
+      </figure>
+      <figure class="gallery__item">
+        <img src="/images/food/pork-roll.jpg" alt="Pork roll su letto di legumi" loading="lazy" />
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ MENU CTA ============ -->
+  <section class="menucta">
+    <div class="menucta__bg" aria-hidden="true"></div>
+    <img src="/images/brand/icon-a.png" alt="" class="menucta__icon" aria-hidden="true" />
+    <div class="menucta__inner">
+      <span class="section-tag section-tag--center">Il Menù</span>
+      <h2 class="menucta__title">
+        7 spicchi di pizza<br />che raccontano una storia
+      </h2>
+      <p class="menucta__sub">
+        Dagli antipasti alla degustazione "Selezione dell'artigiano",
+        fino ai dolci e alla carta dei vini. Sfoglia il menù completo.
+      </p>
+      <a href="/menu-artigiani.pdf" target="_blank" rel="noopener" class="btn btn--primary btn--lg">
+        <span>Apri il Menù completo</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* ---------- shared ---------- */
+  .section-tag {
+    display: inline-block;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    position: relative;
+    padding-left: 2.6rem;
+  }
+  .section-tag::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%;
+    width: 2rem; height: 1px;
+    background: var(--red);
+  }
+  .section-tag--center { padding-left: 0; }
+  .section-tag--center::before { display: none; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    padding: 1rem 1.8rem;
+    border-radius: 100px;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  .btn svg { transition: transform 0.3s ease; }
+  .btn:hover svg { transform: translateX(4px); }
+  .btn--primary { background: var(--red); color: var(--white); }
+  .btn--primary:hover { background: #d93a3a; transform: translateY(-3px); }
+  .btn--ghost { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.25); }
+  .btn--ghost:hover { border-color: var(--cream); color: var(--cream); }
+  .btn--lg { padding: 1.25rem 2.4rem; font-size: 1rem; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6rem clamp(1.2rem, 5vw, 4rem) 4rem;
+    overflow: hidden;
+  }
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero__video {
+    display: none;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.06) brightness(0.8);
+  }
+  .hero__pattern {
+    position: absolute;
+    top: 0; right: 0;
+    width: 42%; height: 100%;
+    background: url('/images/brand/pattern-primary.jpg') center/cover;
+    opacity: 0.16;
+    -webkit-mask-image: linear-gradient(to left, #000 0%, transparent 100%);
+    mask-image: linear-gradient(to left, #000 0%, transparent 100%);
+    pointer-events: none;
+  }
+  .hero__ghost {
+    position: absolute;
+    bottom: -2vw;
+    left: -1vw;
+    font-family: var(--font-brand);
+    font-weight: 700;
+    font-size: 26vw;
+    line-height: 0.8;
+    letter-spacing: 0.02em;
+    color: rgba(190, 48, 48, 0.06);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .hero__content {
+    position: relative;
+    z-index: 2;
+    max-width: 760px;
+  }
+  .hero__eyebrow {
+    color: var(--cream);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    font-size: 0.82rem;
+    margin-bottom: 2rem;
+  }
+  .hero__logo {
+    display: block;
+    width: min(680px, 90%);
+    height: auto;
+    margin-bottom: 2.2rem;
+  }
+  .hero__sub {
+    max-width: 440px;
+    color: rgba(255,255,255,0.75);
+    font-size: clamp(1rem, 1.4vw, 1.2rem);
+    line-height: 1.6;
+    font-style: italic;
+    margin-bottom: 2.6rem;
+  }
+  .hero__actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  /* ---------- MANIFESTO / NASTRO ---------- */
+  .manifesto {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+  .manifesto__ribbon {
+    width: 140%;
+    margin-left: -20%;
+    height: clamp(72px, 9vw, 120px);
+    background: url('/images/brand/pattern-petali.png') center/auto 100% repeat-x;
+    margin-bottom: clamp(3rem, 7vw, 5.5rem);
+    will-change: transform;
+  }
+  .manifesto__inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 clamp(1.2rem, 5vw, 4rem);
+    text-align: center;
+  }
+  .manifesto__text {
+    font-family: var(--font-brand);
+    font-size: clamp(1.7rem, 4.2vw, 3.4rem);
+    line-height: 1.18;
+    text-transform: uppercase;
+    color: var(--white);
+    margin: 1rem auto 0;
+    max-width: 16ch;
+  }
+  .manifesto__text em {
+    color: var(--red);
+    font-style: italic;
+  }
+  .manifesto__zigzag {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: clamp(0.3rem, 1.5vw, 1rem);
+    margin-top: clamp(2.2rem, 5vw, 3.5rem);
+  }
+  .chev {
+    width: clamp(20px, 3vw, 34px);
+    height: auto;
+    opacity: 0.55;
+  }
+  .chev--up { transform: rotate(180deg); }
+
+  /* ---------- STORIA / HAND-STORIES ---------- */
+  .story {
+    padding: clamp(4rem, 12vw, 9rem) clamp(1.2rem, 5vw, 4rem);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .story__intro {
+    max-width: 820px;
+    margin-bottom: clamp(3rem, 7vw, 6rem);
+  }
+  .story__lead {
+    font-family: var(--font-brand);
+    font-size: clamp(1.6rem, 3.4vw, 2.8rem);
+    line-height: 1.25;
+    color: var(--white);
+  }
+  .story__chapters {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+  .chapter {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: start;
+    padding-top: clamp(2rem, 4vw, 3rem);
+    border-top: 1px solid rgba(232,213,188,0.14);
+  }
+  .chapter--text {
+    grid-template-columns: 1fr;
+    border-top: none;
+    padding-top: 0;
+  }
+  .chapter--text p,
+  .chapter__text {
+    color: rgba(255,255,255,0.78);
+    line-height: 1.85;
+    font-size: 1.05rem;
+    margin-bottom: 1.3rem;
+    max-width: 62ch;
+  }
+  .chapter--text {
+    max-width: 760px;
+  }
+  .chapter__title {
+    font-family: var(--font-brand);
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    line-height: 0.92;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--cream);
+  }
+  .chapter__title em { color: var(--red); font-style: italic; }
+  .story__signrow {
+    display: flex;
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+    flex-wrap: wrap;
+  }
+  .story__mark { width: 88px; height: auto; border-radius: 6px; }
+  .story__sign { height: 128px; width: auto; }
+
+  /* ---------- FORME DI CIBO ---------- */
+  .formerow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.8rem, 3vw, 2.6rem);
+    flex-wrap: wrap;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1.2rem, 5vw, 4rem);
+  }
+  .formerow__shape {
+    width: clamp(120px, 19vw, 250px);
+    height: auto;
+    display: block;
+  }
+
+  /* ---------- SEGNI ---------- */
+  .segni {
+    position: relative;
+    padding: clamp(4rem, 10vw, 8rem) clamp(1.2rem, 5vw, 4rem);
+  }
+  .segni__inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .segni__title {
+    font-family: var(--font-brand);
+    font-size: clamp(2rem, 5vw, 4rem);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 3.5rem;
+  }
+  .segni__cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.6rem;
+    text-align: left;
+  }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(232,213,188,0.1);
+    border-radius: 14px;
+    padding: 2.4rem 2rem;
+    transition: transform 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+  }
+  .card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(190,48,48,0.5);
+    background: rgba(190,48,48,0.06);
+  }
+  .card__shape {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    object-position: left top;
+    margin-bottom: 1.6rem;
+  }
+  .card h3 {
+    font-family: var(--font-brand);
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    color: var(--cream);
+  }
+  .card p {
+    color: rgba(255,255,255,0.65);
+    line-height: 1.7;
+    font-size: 0.96rem;
+  }
+
+  /* ---------- GALLERY ---------- */
+  .gallery {
+    padding: clamp(4rem, 10vw, 8rem) clamp(1.2rem, 5vw, 4rem);
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  .gallery__head { margin-bottom: clamp(2rem, 5vw, 3.5rem); }
+  .gallery__title {
+    font-family: var(--font-brand);
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 0.92;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .gallery__title em { color: var(--red); font-style: italic; }
+  .gallery__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .gallery__item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    aspect-ratio: 4 / 5;
+  }
+  .gallery__item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.22,1,0.36,1), filter 0.5s ease;
+  }
+  .gallery__item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(13,13,13,0.45), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .gallery__item:hover img { transform: scale(1.06); }
+  .gallery__item:hover::after { opacity: 1; }
+
+  @media (max-width: 820px) {
+    .gallery__grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ---------- MENU CTA ---------- */
+  .menucta {
+    position: relative;
+    padding: clamp(4rem, 12vw, 9rem) clamp(1.2rem, 5vw, 4rem);
+    overflow: hidden;
+  }
+  .menucta__bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 80% 30%, rgba(190,48,48,0.22), transparent 50%),
+      radial-gradient(circle at 10% 80%, rgba(232,213,188,0.07), transparent 45%);
+  }
+  .menucta__icon {
+    position: absolute;
+    top: 50%;
+    right: clamp(-40px, 2vw, 60px);
+    transform: translateY(-50%);
+    width: clamp(120px, 18vw, 240px);
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  .menucta__inner {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .menucta__title {
+    font-family: var(--font-brand);
+    font-size: clamp(2.2rem, 6vw, 4.6rem);
+    line-height: 0.95;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 1.6rem;
+  }
+  .menucta__sub {
+    color: rgba(255,255,255,0.7);
+    line-height: 1.7;
+    font-size: 1.05rem;
+    max-width: 520px;
+    margin: 0 auto 2.6rem;
+  }
+
+  @media (max-width: 820px) {
+    .chapter { grid-template-columns: 1fr; gap: 0.8rem; }
+    .segni__cards { grid-template-columns: 1fr; }
+
+    /* Hero: video b/n a tutto schermo SOLO su mobile */
+    .hero { justify-content: flex-end; padding-bottom: 6rem; }
+    .hero__video { display: block; }
+    .hero__pattern { display: none; }
+    .hero__ghost { display: none; }
+    .hero__media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(13,13,13,0.92) 0%, rgba(13,13,13,0.45) 45%, rgba(13,13,13,0.55) 100%);
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Hero video: caricato e riprodotto SOLO su mobile (il desktop non lo scarica)
+  const heroVideo = document.getElementById('heroVideo') as HTMLVideoElement | null;
+  const mqMobile = window.matchMedia('(max-width: 820px)');
+  function manageHeroVideo() {
+    if (!heroVideo) return;
+    if (mqMobile.matches) {
+      if (!heroVideo.getAttribute('src')) heroVideo.setAttribute('src', '/video/intro.mp4');
+      if (!reduce) heroVideo.play().catch(() => {});
+    } else {
+      heroVideo.pause();
+    }
+  }
+  manageHeroVideo();
+  mqMobile.addEventListener('change', manageHeroVideo);
+
+  if (!reduce) {
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    tl.from('.hero__eyebrow', { y: 30, opacity: 0, duration: 0.7 })
+      .from('.hero__logo', { y: 50, opacity: 0, duration: 1 }, '-=0.3')
+      .from('.hero__sub', { y: 30, opacity: 0, duration: 0.7 }, '-=0.6')
+      .from('.hero__actions .btn', { y: 30, opacity: 0, duration: 0.6, stagger: 0.12 }, '-=0.4');
+
+    gsap.to('.hero__ghost', {
+      yPercent: -18,
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: 1 },
+    });
+
+    // Manifesto
+    gsap.to('.manifesto__ribbon', {
+      xPercent: -12,
+      scrollTrigger: { trigger: '.manifesto', start: 'top bottom', end: 'bottom top', scrub: 1 },
+    });
+    gsap.from('.manifesto__text', {
+      y: 40, opacity: 0, duration: 1,
+      scrollTrigger: { trigger: '.manifesto__inner', start: 'top 82%' },
+    });
+    gsap.from('.chev', {
+      y: 18, opacity: 0, duration: 0.5, stagger: 0.07, ease: 'back.out(2)',
+      scrollTrigger: { trigger: '.manifesto__zigzag', start: 'top 90%' },
+    });
+
+    gsap.from('.story__lead', {
+      y: 40, opacity: 0, duration: 1,
+      scrollTrigger: { trigger: '.story__intro', start: 'top 80%' },
+    });
+    gsap.utils.toArray<HTMLElement>('.chapter').forEach((el) => {
+      gsap.from(el, {
+        y: 50, opacity: 0, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 85%' },
+      });
+    });
+    gsap.from('.story__signrow', {
+      opacity: 0, y: 30, duration: 0.8,
+      scrollTrigger: { trigger: '.story__signrow', start: 'top 90%' },
+    });
+
+    gsap.from('.formerow__shape', {
+      y: 50, opacity: 0, scale: 0.85, duration: 0.8, stagger: 0.12, ease: 'back.out(1.5)',
+      scrollTrigger: { trigger: '.formerow', start: 'top 85%' },
+    });
+
+    gsap.from('.card', {
+      y: 70, opacity: 0, duration: 0.9, stagger: 0.15,
+      scrollTrigger: { trigger: '.segni__cards', start: 'top 80%' },
+    });
+
+    gsap.from('.gallery__title', {
+      x: -40, opacity: 0, duration: 1,
+      scrollTrigger: { trigger: '.gallery', start: 'top 80%' },
+    });
+    gsap.from('.gallery__item', {
+      y: 60, opacity: 0, duration: 0.9, stagger: 0.08,
+      scrollTrigger: { trigger: '.gallery__grid', start: 'top 82%' },
+    });
+
+    gsap.from('.menucta__inner > *', {
+      y: 50, opacity: 0, duration: 0.9, stagger: 0.12,
+      scrollTrigger: { trigger: '.menucta', start: 'top 75%' },
+    });
+  }
+</script>
