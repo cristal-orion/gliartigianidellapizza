@@ -1,0 +1,250 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { isValidSession, SESSION_COOKIE } from '../../lib/auth';
+import { db, schema } from '../../db';
+import { desc } from 'drizzle-orm';
+import { getSettings, getClosures, DAYS_IT } from '../../lib/settings';
+
+if (!isValidSession(Astro.cookies.get(SESSION_COOKIE)?.value)) {
+  return Astro.redirect('/admin/login');
+}
+
+const bookings = db.select().from(schema.bookings).orderBy(desc(schema.bookings.createdAt)).all();
+const pending = bookings.filter((b) => b.status === 'pending');
+const handled = bookings.filter((b) => b.status !== 'pending');
+const { hours, slots, menuPath } = getSettings();
+const closures = getClosures();
+
+// ordine di visualizzazione: Lun → Dom
+const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+
+const saved = Astro.url.searchParams.get('saved');
+const error = Astro.url.searchParams.get('error');
+
+const fmt = (d: string) =>
+  new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+const rangesToText = (rs: { open: string; close: string }[]) => rs.map((r) => `${r.open}-${r.close}`).join(', ');
+const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: 'Confermata', rejected: 'Rifiutata' };
+---
+<Layout title="Pannello gestore — Gli Artigiani" noindex={true}>
+  <main class="admin">
+    <header class="admin__top">
+      <div>
+        <span class="admin__eyebrow">Pannello gestore</span>
+        <h1>Gli Artigiani</h1>
+      </div>
+      <form method="POST" action="/api/admin/logout"><button class="ghost">Esci</button></form>
+    </header>
+
+    {saved && <p class="flash flash--ok">Modifiche salvate ✓</p>}
+    {error && <p class="flash flash--err">Si è verificato un errore. Riprova.</p>}
+
+    <!-- ===== PRENOTAZIONI ===== -->
+    <section class="panel">
+      <h2>Richieste da confermare {pending.length > 0 && <span class="badge">{pending.length}</span>}</h2>
+      {pending.length === 0 && <p class="muted">Nessuna richiesta in attesa.</p>}
+      <div class="cards">
+        {pending.map((b) => (
+          <article class="bcard bcard--pending">
+            <div class="bcard__head">
+              <strong>{fmt(b.date)} · {b.time}</strong>
+              <span class="cov">{b.covers} coperti</span>
+            </div>
+            <p class="bcard__name">{b.firstName} {b.lastName}</p>
+            <p class="bcard__meta"><a href={`tel:${b.phone}`}>{b.phone}</a> · <a href={`mailto:${b.email}`}>{b.email}</a></p>
+            {b.notes && <p class="bcard__notes">“{b.notes}”</p>}
+            <div class="bcard__actions">
+              <form method="POST" action="/api/admin/booking">
+                <input type="hidden" name="id" value={b.id} />
+                <input type="hidden" name="action" value="confirm" />
+                <button class="ok">Conferma</button>
+              </form>
+              <form method="POST" action="/api/admin/booking">
+                <input type="hidden" name="id" value={b.id} />
+                <input type="hidden" name="action" value="reject" />
+                <button class="warn">Rifiuta</button>
+              </form>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {handled.length > 0 && (
+        <details class="history">
+          <summary>Storico prenotazioni ({handled.length})</summary>
+          <table>
+            <thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cop.</th><th>Stato</th><th></th></tr></thead>
+            <tbody>
+              {handled.map((b) => (
+                <tr>
+                  <td>{fmt(b.date)}</td>
+                  <td>{b.time}</td>
+                  <td>{b.firstName} {b.lastName}<br /><small class="muted">{b.phone}</small></td>
+                  <td>{b.covers}</td>
+                  <td><span class={`pill pill--${b.status}`}>{statusLabel[b.status]}</span></td>
+                  <td>
+                    <form method="POST" action="/api/admin/booking" onsubmit="return confirm('Eliminare questa prenotazione?')">
+                      <input type="hidden" name="id" value={b.id} />
+                      <input type="hidden" name="action" value="delete" />
+                      <button class="link-del">Elimina</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
+    </section>
+
+    <!-- ===== ORARI & SLOT ===== -->
+    <section class="panel">
+      <h2>Orari di apertura e fasce prenotabili</h2>
+      <p class="muted">Orari = mostrati sul sito. Fasce prenotabili = orari selezionabili nel modulo. Lascia vuoto per “chiuso”.</p>
+      <form method="POST" action="/api/admin/schedule" class="sched">
+        <div class="sched__head"><span>Giorno</span><span>Orari apertura (es. 12:30-15:00, 19:00-00:00)</span><span>Fasce prenotabili (es. 19:30, 20:30)</span></div>
+        {dayOrder.map((d) => (
+          <div class="sched__row">
+            <span class="sched__day">{DAYS_IT[d]}</span>
+            <input type="text" name={`hours_${d}`} value={rangesToText(hours[d] || [])} placeholder="chiuso" />
+            <input type="text" name={`slots_${d}`} value={(slots[d] || []).join(', ')} placeholder="chiuso" />
+          </div>
+        ))}
+        <button class="ok wide">Salva orari</button>
+      </form>
+    </section>
+
+    <!-- ===== CHIUSURE ===== -->
+    <section class="panel">
+      <h2>Chiusure straordinarie / festività</h2>
+      <form method="POST" action="/api/admin/closure" class="closure-add">
+        <input type="hidden" name="action" value="add" />
+        <input type="date" name="date" required />
+        <input type="text" name="reason" placeholder="Motivo (facoltativo)" />
+        <button class="ok">Aggiungi chiusura</button>
+      </form>
+      {closures.length === 0 ? (
+        <p class="muted">Nessuna chiusura programmata.</p>
+      ) : (
+        <ul class="closures">
+          {closures.map((c) => (
+            <li>
+              <span>{fmt(c.date)} {c.reason && <em class="muted">— {c.reason}</em>}</span>
+              <form method="POST" action="/api/admin/closure">
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="id" value={c.id} />
+                <button class="link-del">Rimuovi</button>
+              </form>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <!-- ===== MENU PDF ===== -->
+    <section class="panel">
+      <h2>Menù (PDF)</h2>
+      <p class="muted">{menuPath ? 'È attivo un PDF caricato.' : 'È attivo il PDF di default.'} Carica un nuovo file per sostituirlo.</p>
+      <form method="POST" action="/api/admin/menu" enctype="multipart/form-data" class="menu-up">
+        <input type="file" name="menu" accept="application/pdf" required />
+        <button class="ok">Carica nuovo menù</button>
+      </form>
+      <p><a href="/menu.pdf" target="_blank" rel="noopener" class="muted">Apri il menù attuale →</a></p>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  .admin {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+  }
+  .admin__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+  }
+  .admin__eyebrow { color: var(--red); text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.72rem; }
+  .admin__top h1 { font-family: var(--font-brand); text-transform: uppercase; font-size: 2rem; }
+  .flash { padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; }
+  .flash--ok { background: rgba(60,160,90,0.15); color: #6fe09a; }
+  .flash--err { background: rgba(190,48,48,0.15); color: #ff8a8a; }
+
+  .panel {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(232,213,188,0.1);
+    border-radius: 14px;
+    padding: 1.6rem;
+    margin-bottom: 1.4rem;
+  }
+  .panel h2 {
+    font-family: var(--font-brand);
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    color: var(--cream);
+    margin-bottom: 0.4rem;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .badge { background: var(--red); color: #fff; font-family: var(--font-body); font-size: 0.8rem; border-radius: 100px; padding: 0.1rem 0.6rem; }
+  .muted { color: rgba(255,255,255,0.5); font-size: 0.88rem; margin-bottom: 0.8rem; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 1rem; }
+  .bcard { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.1rem; }
+  .bcard--pending { border-color: rgba(190,48,48,0.4); }
+  .bcard__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem; }
+  .bcard__head strong { color: var(--cream); }
+  .cov { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+  .bcard__name { font-weight: 600; }
+  .bcard__meta { font-size: 0.82rem; color: rgba(255,255,255,0.6); margin: 0.3rem 0; }
+  .bcard__meta a { color: rgba(255,255,255,0.7); }
+  .bcard__notes { font-size: 0.85rem; font-style: italic; color: rgba(255,255,255,0.65); margin: 0.4rem 0; }
+  .bcard__actions { display: flex; gap: 0.6rem; margin-top: 0.8rem; }
+
+  button { cursor: pointer; border: none; border-radius: 100px; padding: 0.55rem 1.1rem; font-weight: 600; font-size: 0.85rem; }
+  button.ok { background: var(--red); color: #fff; }
+  button.ok:hover { background: #d93a3a; }
+  button.warn { background: transparent; color: #ff8a8a; border: 1px solid rgba(255,138,138,0.4); }
+  button.ghost { background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.2); }
+  button.wide { width: 100%; margin-top: 1rem; padding: 0.8rem; }
+  .link-del { background: none; color: rgba(255,138,138,0.8); padding: 0; font-size: 0.8rem; }
+
+  .history { margin-top: 1.4rem; }
+  .history summary { cursor: pointer; color: var(--cream); font-size: 0.9rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
+  th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  th { color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; }
+  .pill { padding: 0.15rem 0.6rem; border-radius: 100px; font-size: 0.75rem; }
+  .pill--confirmed { background: rgba(60,160,90,0.2); color: #6fe09a; }
+  .pill--rejected { background: rgba(190,48,48,0.2); color: #ff8a8a; }
+
+  .sched__head, .sched__row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 0.7rem; align-items: center; }
+  .sched__head { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.45); margin-bottom: 0.6rem; }
+  .sched__row { margin-bottom: 0.5rem; }
+  .sched__day { color: var(--cream); font-size: 0.9rem; }
+
+  input[type=text], input[type=date], input[type=file] {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    color: var(--white);
+    font-size: 0.9rem;
+    width: 100%;
+  }
+  input:focus { outline: none; border-color: var(--red); }
+
+  .closure-add, .menu-up { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  .closure-add input[type=date] { width: auto; }
+  .closure-add input[type=text] { flex: 1; min-width: 180px; }
+  .closures { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .closures li { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.8rem; background: rgba(255,255,255,0.04); border-radius: 8px; font-size: 0.9rem; }
+  .menu-up input[type=file] { flex: 1; min-width: 200px; }
+
+  @media (max-width: 680px) {
+    .sched__head { display: none; }
+    .sched__row { grid-template-columns: 1fr; gap: 0.3rem; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  }
+</style>

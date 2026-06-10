@@ -1,8 +1,79 @@
 ---
 interface Props {
   title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
 }
-const { title = 'Gli Artigiani — Forme · Estro · Sapienza' } = Astro.props;
+
+const {
+  title = 'Gli Artigiani — Pizzeria a Giugliano in Campania (NA)',
+  description = 'Gli Artigiani: pizzeria artigianale a Giugliano in Campania (NA). Impasti a lievitazione lenta, materie prime selezionate e abbinamenti d’autore. Forme, Estro, Sapienza. Prenota il tuo tavolo.',
+  image = '/images/food/pizza-zucca.jpg',
+  noindex = false,
+} = Astro.props;
+
+// URL assoluti per canonical / social (richiedono `site` in astro.config)
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image, Astro.site).href;
+
+// Dati strutturati Restaurant — leggibili da Google e dalle AI (GEO)
+const restaurantSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  '@id': 'https://gliartigiani.it/#restaurant',
+  name: 'Gli Artigiani',
+  description:
+    'Pizzeria artigianale a Giugliano in Campania: impasti a lievitazione lenta, materie prime selezionate e abbinamenti d’autore.',
+  url: 'https://gliartigiani.it',
+  image: 'https://gliartigiani.it/images/food/pizza-zucca.jpg',
+  logo: 'https://gliartigiani.it/images/brand/logo-red.png',
+  telephone: '+390815061549',
+  servesCuisine: ['Pizza', 'Cucina italiana', 'Cucina napoletana'],
+  priceRange: '€€',
+  acceptsReservations: 'https://gliartigiani.it/prenota',
+  hasMenu: 'https://gliartigiani.it/menu-artigiani.pdf',
+  hasMap: 'https://maps.app.goo.gl/NzTQiGsL4oVdosgp9',
+  sameAs: [
+    'https://www.instagram.com/gli_artigiani_la_pizzeria/',
+    'https://www.facebook.com/GliArtigianipizzeria/',
+  ],
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: 'Via Santa Rita da Cascia, 13',
+    addressLocality: 'Giugliano in Campania',
+    addressRegion: 'NA',
+    postalCode: '80014',
+    addressCountry: 'IT',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 40.9349697,
+    longitude: 14.2058756,
+  },
+  contactPoint: [
+    {
+      '@type': 'ContactPoint',
+      telephone: '+390815061549',
+      contactType: 'customer service',
+    },
+    {
+      '@type': 'ContactPoint',
+      telephone: '+39334565789',
+      contactType: 'reservations',
+    },
+  ],
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Monday', opens: '19:00', closes: '00:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Wednesday', opens: '19:00', closes: '00:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Thursday', opens: '19:00', closes: '00:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Friday', opens: '12:30', closes: '15:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Friday', opens: '19:00', closes: '00:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: '12:30', closes: '15:30' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Saturday', opens: '19:00', closes: '00:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: 'Sunday', opens: '19:00', closes: '00:00' },
+  ],
+};
 ---
 <!DOCTYPE html>
 <html lang="it">
@@ -10,10 +81,36 @@ const { title = 'Gli Artigiani — Forme · Estro · Sapienza' } = Astro.props;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
-  <meta name="description" content="Gli Artigiani — Pizzeria di qualità artigianale. Forme, Estro, Sapienza." />
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {noindex && <meta name="robots" content="noindex, nofollow" />}
+  <meta name="theme-color" content="#0d0d0d" />
+  <meta name="author" content="Gli Artigiani" />
+
+  <!-- Geo / local -->
+  <meta name="geo.region" content="IT-NA" />
+  <meta name="geo.placename" content="Giugliano in Campania" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="restaurant" />
+  <meta property="og:site_name" content="Gli Artigiani" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImage} />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <script type="application/ld+json" set:html={JSON.stringify(restaurantSchema)} />
   <style is:global>
     @font-face {
       font-family: 'Lupina';
@@ -48,6 +145,18 @@ const { title = 'Gli Artigiani — Forme · Estro · Sapienza' } = Astro.props;
 
     html {
       scroll-behavior: smooth;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     body {

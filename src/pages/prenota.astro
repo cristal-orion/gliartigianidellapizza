@@ -1,13 +1,18 @@
 ---
+export const prerender = false;
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import { getSettings, getClosures } from '../lib/settings';
 
-// Quando il sottodominio del WordPress (Amelia) sarà attivo,
-// basta cambiare questo URL — es. https://prenota.gliartigianipizzeria.it/prenota/
-const BOOKING_URL = 'https://gliartigianipizzeria.it/prenota/';
+const { slots } = getSettings();
+const closures = getClosures().map((c) => c.date);
+const today = new Date().toISOString().slice(0, 10);
 ---
-<Layout title="Prenota un tavolo — Gli Artigiani">
+<Layout
+  title="Prenota un tavolo — Gli Artigiani | Pizzeria a Giugliano in Campania"
+  description="Prenota online il tuo tavolo da Gli Artigiani, pizzeria a Giugliano in Campania (NA). Scegli data, orario e numero di coperti, oppure chiamaci."
+>
   <Nav />
 
   <section class="prenotahero">
@@ -21,17 +26,78 @@ const BOOKING_URL = 'https://gliartigianipizzeria.it/prenota/';
   </section>
 
   <section class="booking">
-    <div class="booking__frame reveal">
-      <iframe
-        src={BOOKING_URL}
-        title="Prenotazione tavolo Gli Artigiani"
-        loading="lazy"
-      ></iframe>
+    <div class="booking__card reveal">
+      <form id="bookingForm" novalidate>
+        <div class="grid">
+          <label class="field">
+            <span>Data</span>
+            <input type="date" name="date" id="bDate" min={today} required />
+          </label>
+          <label class="field">
+            <span>Orario</span>
+            <select name="time" id="bTime" required disabled>
+              <option value="">Scegli prima la data</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Coperti</span>
+            <select name="covers" required>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+                <option value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <p class="dayhint" id="dayHint" hidden></p>
+
+        <div class="grid">
+          <label class="field">
+            <span>Nome</span>
+            <input type="text" name="firstName" required autocomplete="given-name" />
+          </label>
+          <label class="field">
+            <span>Cognome</span>
+            <input type="text" name="lastName" required autocomplete="family-name" />
+          </label>
+        </div>
+
+        <div class="grid">
+          <label class="field">
+            <span>Telefono</span>
+            <input type="tel" name="phone" required autocomplete="tel" />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Note / richieste speciali (facoltativo)</span>
+          <textarea name="notes" rows="3"></textarea>
+        </label>
+
+        <label class="consent">
+          <input type="checkbox" name="consent" required />
+          <span>Ho letto e accetto l'informativa sul trattamento dei dati personali.</span>
+        </label>
+
+        <p class="formerror" id="formError" hidden></p>
+
+        <button type="submit" class="submit" id="submitBtn">Invia richiesta</button>
+        <p class="note">È una richiesta: ti confermeremo il tavolo via email a breve.</p>
+      </form>
+
+      <div class="success" id="successBox" hidden>
+        <span class="success__check">✓</span>
+        <h2>Richiesta inviata!</h2>
+        <p>Grazie. Abbiamo ricevuto la tua richiesta e ti confermeremo la disponibilità via email il prima possibile.</p>
+      </div>
     </div>
+
     <p class="booking__fallback">
-      Problemi con il modulo?
-      <a href={BOOKING_URL} target="_blank" rel="noopener">Apri la prenotazione in una nuova scheda</a>
-      oppure chiamaci allo <a href="tel:+39334565789">+39 334 565789</a>.
+      Preferisci chiamare? <a href="tel:+390815061549">081 506 1549</a>
     </p>
   </section>
 
@@ -81,37 +147,197 @@ const BOOKING_URL = 'https://gliartigianipizzeria.it/prenota/';
   }
 
   .booking {
-    max-width: 900px;
+    max-width: 760px;
     margin: 0 auto;
     padding: 0 clamp(1.2rem, 5vw, 4rem) clamp(4rem, 10vw, 7rem);
   }
-  .booking__frame {
-    background: var(--white);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+  .booking__card {
+    background: rgba(255,255,255,0.03);
     border: 1px solid rgba(232,213,188,0.12);
+    border-radius: 16px;
+    padding: clamp(1.6rem, 4vw, 2.6rem);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45);
   }
-  .booking__frame iframe {
-    display: block;
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .field { display: flex; flex-direction: column; gap: 0.45rem; }
+  .field > span {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.55);
+  }
+  input, select, textarea {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 9px;
+    padding: 0.8rem 0.9rem;
+    color: var(--white);
+    font-size: 1rem;
+    font-family: var(--font-body);
     width: 100%;
-    height: 820px;
-    border: none;
   }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red); }
+  select:disabled { opacity: 0.5; }
+  textarea { resize: vertical; }
+  /* rende leggibile il calendario nativo su tema scuro */
+  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
+
+  .dayhint {
+    font-size: 0.85rem;
+    color: var(--red);
+    margin: -0.2rem 0 1rem;
+  }
+  .consent {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    margin: 0.4rem 0 0.4rem;
+    font-size: 0.86rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+  }
+  .consent input { width: auto; margin-top: 0.15rem; accent-color: var(--red); }
+
+  .formerror {
+    color: #ff8a8a;
+    background: rgba(190,48,48,0.12);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.88rem;
+    margin: 0.8rem 0 0;
+  }
+  .submit {
+    width: 100%;
+    margin-top: 1.2rem;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.25s ease;
+  }
+  .submit:hover { background: #d93a3a; transform: translateY(-2px); }
+  .submit:disabled { opacity: 0.6; cursor: wait; transform: none; }
+  .note { text-align: center; color: rgba(255,255,255,0.45); font-size: 0.82rem; margin-top: 0.9rem; }
+
+  .success { text-align: center; padding: 1.5rem 0; }
+  .success__check {
+    display: inline-grid; place-items: center;
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(60,160,90,0.2); color: #6fe09a;
+    font-size: 1.8rem; margin-bottom: 1rem;
+  }
+  .success h2 { font-family: var(--font-brand); text-transform: uppercase; font-size: 1.8rem; color: var(--cream); margin-bottom: 0.6rem; }
+  .success p { color: rgba(255,255,255,0.7); line-height: 1.6; max-width: 420px; margin: 0 auto; }
+
   .booking__fallback {
     text-align: center;
     margin-top: 1.6rem;
     color: rgba(255,255,255,0.55);
     font-size: 0.92rem;
-    line-height: 1.7;
   }
-  .booking__fallback a {
-    color: var(--cream);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
+  .booking__fallback a { color: var(--cream); text-decoration: underline; text-underline-offset: 3px; }
   .booking__fallback a:hover { color: var(--red); }
 </style>
+
+<script define:vars={{ slotsData: slots, closuresData: closures }}>
+  const form = document.getElementById('bookingForm');
+  const dateEl = document.getElementById('bDate');
+  const timeEl = document.getElementById('bTime');
+  const hint = document.getElementById('dayHint');
+  const errBox = document.getElementById('formError');
+  const submitBtn = document.getElementById('submitBtn');
+  const successBox = document.getElementById('successBox');
+
+  function refreshSlots() {
+    const val = dateEl.value;
+    timeEl.innerHTML = '';
+    hint.hidden = true;
+    if (!val) {
+      timeEl.disabled = true;
+      timeEl.innerHTML = '<option value="">Scegli prima la data</option>';
+      return;
+    }
+    if (closuresData.includes(val)) {
+      timeEl.disabled = true;
+      timeEl.innerHTML = '<option value="">—</option>';
+      hint.textContent = 'Quel giorno siamo chiusi per chiusura straordinaria.';
+      hint.hidden = false;
+      return;
+    }
+    const weekday = new Date(val + 'T00:00:00').getDay();
+    const daySlots = slotsData[weekday] || [];
+    if (daySlots.length === 0) {
+      timeEl.disabled = true;
+      timeEl.innerHTML = '<option value="">—</option>';
+      hint.textContent = 'Siamo chiusi nel giorno selezionato. Scegli un altro giorno.';
+      hint.hidden = false;
+      return;
+    }
+    timeEl.disabled = false;
+    timeEl.innerHTML = '<option value="">Scegli un orario</option>' +
+      daySlots.map((t) => `<option value="${t}">${t}</option>`).join('');
+  }
+
+  dateEl.addEventListener('change', refreshSlots);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errBox.hidden = true;
+
+    const data = {
+      date: dateEl.value,
+      time: timeEl.value,
+      covers: form.covers.value,
+      firstName: form.firstName.value.trim(),
+      lastName: form.lastName.value.trim(),
+      phone: form.phone.value.trim(),
+      email: form.email.value.trim(),
+      notes: form.notes.value.trim(),
+      consent: form.consent.checked,
+    };
+
+    if (!data.date || !data.time || !data.firstName || !data.lastName || !data.phone || !data.email) {
+      errBox.textContent = 'Compila tutti i campi obbligatori e scegli un orario.';
+      errBox.hidden = false;
+      return;
+    }
+    if (!data.consent) {
+      errBox.textContent = 'Devi accettare l’informativa privacy per inviare la richiesta.';
+      errBox.hidden = false;
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Invio in corso…';
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || 'Errore durante l’invio.');
+      form.hidden = true;
+      successBox.hidden = false;
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.hidden = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Invia richiesta';
+    }
+  });
+</script>
 
 <script>
   import { gsap } from 'gsap';
@@ -119,6 +345,6 @@ const BOOKING_URL = 'https://gliartigianipizzeria.it/prenota/';
   if (!reduce) {
     gsap.from('.prenotahero__title', { y: 70, opacity: 0, duration: 1, ease: 'power3.out' });
     gsap.from('.prenotahero__sub', { y: 30, opacity: 0, duration: 0.8, delay: 0.25, ease: 'power3.out' });
-    gsap.from('.booking__frame', { y: 50, opacity: 0, duration: 1, delay: 0.3, ease: 'power3.out' });
+    gsap.from('.booking__card', { y: 50, opacity: 0, duration: 1, delay: 0.3, ease: 'power3.out' });
   }
 </script>
