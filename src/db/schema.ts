@@ -14,6 +14,7 @@ export const bookings = sqliteTable('bookings', {
   notes: text('notes'),
   status: text('status').notNull().default('pending'),
   token: text('token'), // link sicuro per conferma/rifiuto da email
+  marketingConsent: integer('marketing_consent').notNull().default(0), // opt-in newsletter/promo
 });
 
 // Chiusure straordinarie / festività (sovrascrivono gli orari settimanali)

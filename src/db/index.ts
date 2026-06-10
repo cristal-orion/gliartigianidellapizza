@@ -26,7 +26,8 @@ sqlite.exec(`
     email TEXT NOT NULL,
     notes TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
-    token TEXT
+    token TEXT,
+    marketing_consent INTEGER NOT NULL DEFAULT 0
   );
   CREATE TABLE IF NOT EXISTS closures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +46,9 @@ sqlite.exec(`
 const cols = sqlite.prepare('PRAGMA table_info(bookings)').all() as { name: string }[];
 if (!cols.some((c) => c.name === 'token')) {
   sqlite.exec('ALTER TABLE bookings ADD COLUMN token TEXT');
+}
+if (!cols.some((c) => c.name === 'marketing_consent')) {
+  sqlite.exec('ALTER TABLE bookings ADD COLUMN marketing_consent INTEGER NOT NULL DEFAULT 0');
 }
 
 export const db = drizzle(sqlite, { schema });

@@ -34,7 +34,10 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
         <span class="admin__eyebrow">Pannello gestore</span>
         <h1>Gli Artigiani</h1>
       </div>
-      <form method="POST" action="/api/admin/logout"><button class="ghost">Esci</button></form>
+      <div class="admin__nav">
+        <a href="/admin/stats" class="ghost">Statistiche →</a>
+        <form method="POST" action="/api/admin/logout"><button class="ghost">Esci</button></form>
+      </div>
     </header>
 
     {saved && <p class="flash flash--ok">Modifiche salvate ✓</p>}
@@ -208,6 +211,9 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
   button.ok:hover { background: #d93a3a; }
   button.warn { background: transparent; color: #ff8a8a; border: 1px solid rgba(255,138,138,0.4); }
   button.ghost { background: transparent; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.2); }
+  .admin__nav { display: flex; gap: 0.6rem; align-items: center; }
+  a.ghost { display: inline-block; text-decoration: none; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 0.55rem 1.1rem; font-size: 0.85rem; font-weight: 600; }
+  a.ghost:hover { color: var(--cream); border-color: var(--red); }
   button.wide { width: 100%; margin-top: 1rem; padding: 0.8rem; }
   .link-del { background: none; color: rgba(255,138,138,0.8); padding: 0; font-size: 0.8rem; }
 

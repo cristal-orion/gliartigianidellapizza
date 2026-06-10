@@ -83,6 +83,11 @@ const today = new Date().toISOString().slice(0, 10);
           <span>Ho letto e accetto l'informativa sul trattamento dei dati personali.</span>
         </label>
 
+        <label class="consent consent--optional">
+          <input type="checkbox" name="marketingConsent" />
+          <span>Desidero ricevere offerte e novità da Gli Artigiani (facoltativo).</span>
+        </label>
+
         <p class="formerror" id="formError" hidden></p>
 
         <button type="submit" class="submit" id="submitBtn">Invia richiesta</button>
@@ -202,6 +207,7 @@ const today = new Date().toISOString().slice(0, 10);
     line-height: 1.5;
   }
   .consent input { width: auto; margin-top: 0.15rem; accent-color: var(--red); }
+  .consent--optional { color: rgba(255,255,255,0.55); font-size: 0.82rem; margin-top: 0.1rem; }
 
   .formerror {
     color: #ff8a8a;
@@ -304,6 +310,7 @@ const today = new Date().toISOString().slice(0, 10);
       email: form.email.value.trim(),
       notes: form.notes.value.trim(),
       consent: form.consent.checked,
+      marketingConsent: form.marketingConsent.checked,
     };
 
     if (!data.date || !data.time || !data.firstName || !data.lastName || !data.phone || !data.email) {

@@ -25,6 +25,7 @@ export const POST: APIRoute = async ({ request }) => {
   const email = String(body.email || '').trim();
   const notes = String(body.notes || '').trim() || null;
   const consent = body.consent === true || body.consent === 'on';
+  const marketingConsent = body.marketingConsent === true || body.marketingConsent === 'on';
 
   // Validazione
   if (!date || !time || !firstName || !lastName || !phone || !email) {
@@ -57,6 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
       date, time, covers, firstName, lastName, phone, email, notes,
       status: 'pending',
       token: randomUUID(),
+      marketingConsent: marketingConsent ? 1 : 0,
     })
     .returning()
     .get();

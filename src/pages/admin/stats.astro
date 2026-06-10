@@ -1,0 +1,215 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { isValidSession, SESSION_COOKIE } from '../../lib/auth';
+import { getAnalytics } from '../../lib/analytics';
+import { getCustomers } from '../../lib/customers';
+import { klaviyoConfigured } from '../../lib/klaviyo';
+
+if (!isValidSession(Astro.cookies.get(SESSION_COOKIE)?.value)) {
+  return Astro.redirect('/admin/login');
+}
+
+const a = getAnalytics();
+const customers = getCustomers();
+const marketingCount = customers.filter((c) => c.marketing).length;
+const kConfigured = klaviyoConfigured();
+
+const klaviyo = Astro.url.searchParams.get('klaviyo');
+const kn = Astro.url.searchParams.get('n');
+const kmsg = Astro.url.searchParams.get('msg');
+
+// etichette mese leggibili (es. "giu 25")
+const monthLabels = a.months.map((m) => {
+  const [y, mo] = m.split('-');
+  return new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('it-IT', { month: 'short', year: '2-digit' });
+});
+
+const chartData = {
+  monthLabels,
+  bookingsByMonth: a.bookingsByMonth,
+  coversByMonth: a.coversByMonth,
+  status: a.status,
+  byWeekday: a.byWeekday,
+  slotLabels: a.slots.map((s) => s.time),
+  slotCounts: a.slots.map((s) => s.count),
+};
+
+const fmt = (d: string) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: '2-digit' }) : '—');
+const topCustomers = customers.slice(0, 15);
+---
+<Layout title="Statistiche — Gli Artigiani" noindex={true}>
+  <main class="stats">
+    <header class="stats__top">
+      <div>
+        <span class="eyebrow">Storico & andamenti</span>
+        <h1>Statistiche</h1>
+      </div>
+      <a href="/admin" class="ghost">← Prenotazioni</a>
+    </header>
+
+    {klaviyo === 'ok' && <p class="flash flash--ok">Sincronizzati {kn} contatti su Klaviyo ✓</p>}
+    {klaviyo === 'err' && <p class="flash flash--err">Errore Klaviyo: {kmsg}</p>}
+
+    <!-- KPI -->
+    <section class="kpis">
+      <div class="kpi"><span class="kpi__n">{a.total}</span><span class="kpi__l">Prenotazioni totali</span></div>
+      <div class="kpi"><span class="kpi__n">{a.status.confirmed}</span><span class="kpi__l">Confermate</span></div>
+      <div class="kpi"><span class="kpi__n">{a.confirmRate}%</span><span class="kpi__l">Tasso di conferma</span></div>
+      <div class="kpi"><span class="kpi__n">{a.totalCovers}</span><span class="kpi__l">Coperti serviti</span></div>
+    </section>
+
+    <!-- Grafici -->
+    <section class="charts">
+      <div class="panel chart-box chart-box--wide">
+        <h2>Andamento prenotazioni (12 mesi)</h2>
+        <canvas id="chMonths"></canvas>
+      </div>
+      <div class="panel chart-box">
+        <h2>Stato richieste</h2>
+        <canvas id="chStatus"></canvas>
+      </div>
+      <div class="panel chart-box">
+        <h2>Coperti per mese</h2>
+        <canvas id="chCovers"></canvas>
+      </div>
+      <div class="panel chart-box">
+        <h2>Per giorno della settimana</h2>
+        <canvas id="chWeekday"></canvas>
+      </div>
+      <div class="panel chart-box">
+        <h2>Fasce orarie più richieste</h2>
+        <canvas id="chSlots"></canvas>
+      </div>
+    </section>
+
+    <!-- Clienti + export -->
+    <section class="panel">
+      <div class="cust__head">
+        <h2>Clienti <span class="muted">({customers.length} · {marketingCount} con consenso marketing)</span></h2>
+        <div class="cust__actions">
+          <a class="btn-sm" href="/api/admin/customers.csv" download>Esporta tutti (CSV)</a>
+          <a class="btn-sm" href="/api/admin/customers.csv?marketing=1" download>Esporta consenso marketing (CSV)</a>
+          {kConfigured ? (
+            <form method="POST" action="/api/admin/klaviyo-sync">
+              <button class="btn-sm btn-sm--accent">Sincronizza su Klaviyo</button>
+            </form>
+          ) : (
+            <span class="muted klaviyo-hint">Klaviyo non configurato (imposta KLAVIYO_API_KEY e KLAVIYO_LIST_ID)</span>
+          )}
+        </div>
+      </div>
+
+      {customers.length === 0 ? (
+        <p class="muted">Ancora nessun cliente.</p>
+      ) : (
+        <table class="cust">
+          <thead><tr><th>Cliente</th><th>Contatti</th><th>Pren.</th><th>Coperti</th><th>Ultima</th><th>Mkt</th></tr></thead>
+          <tbody>
+            {topCustomers.map((c) => (
+              <tr>
+                <td>{c.firstName} {c.lastName}</td>
+                <td class="muted">{c.email}<br />{c.phone}</td>
+                <td>{c.bookings} <small class="muted">({c.confirmed} ok)</small></td>
+                <td>{c.covers}</td>
+                <td>{fmt(c.lastDate)}</td>
+                <td>{c.marketing ? <span class="dot dot--on" title="Consenso marketing">●</span> : <span class="dot">○</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {customers.length > topCustomers.length && <p class="muted">Mostrati i primi {topCustomers.length}. Esporta il CSV per la lista completa.</p>}
+    </section>
+  </main>
+
+  <script type="application/json" id="statsData" set:html={JSON.stringify(chartData)}></script>
+</Layout>
+
+<style>
+  .stats { max-width: 1100px; margin: 0 auto; padding: clamp(1.5rem,4vw,3rem) clamp(1rem,4vw,2.5rem) 5rem; }
+  .stats__top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
+  .eyebrow { color: var(--red); text-transform: uppercase; letter-spacing: 0.2em; font-size: 0.72rem; }
+  .stats__top h1 { font-family: var(--font-brand); text-transform: uppercase; font-size: 2rem; }
+  .ghost { color: rgba(255,255,255,0.6); text-decoration: none; border: 1px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 0.5rem 1.1rem; font-size: 0.85rem; }
+  .ghost:hover { color: var(--cream); }
+  .flash { padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.2rem; font-size: 0.9rem; }
+  .flash--ok { background: rgba(60,160,90,0.15); color: #6fe09a; }
+  .flash--err { background: rgba(190,48,48,0.15); color: #ff8a8a; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 1rem; margin-bottom: 1.4rem; }
+  .kpi { background: rgba(255,255,255,0.03); border: 1px solid rgba(232,213,188,0.1); border-radius: 14px; padding: 1.4rem; text-align: center; }
+  .kpi__n { display: block; font-family: var(--font-brand); font-size: 2.4rem; color: var(--cream); line-height: 1; }
+  .kpi__l { font-size: 0.78rem; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.4rem; }
+  .panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(232,213,188,0.1); border-radius: 14px; padding: 1.4rem; }
+  .chart-box--wide { grid-column: 1 / -1; }
+  .chart-box h2, .panel h2 { font-family: var(--font-brand); text-transform: uppercase; font-size: 1.05rem; color: var(--cream); margin-bottom: 1rem; }
+  canvas { max-height: 280px; }
+
+  .muted { color: rgba(255,255,255,0.5); font-weight: 400; font-size: 0.85rem; }
+  .cust__head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .cust__actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  .btn-sm { background: rgba(255,255,255,0.06); color: var(--cream); border: 1px solid rgba(255,255,255,0.15); border-radius: 100px; padding: 0.5rem 1rem; font-size: 0.82rem; text-decoration: none; cursor: pointer; }
+  .btn-sm:hover { border-color: var(--red); }
+  .btn-sm--accent { background: var(--red); color: #fff; border: none; }
+  .klaviyo-hint { font-size: 0.78rem; }
+
+  table.cust { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  table.cust th, table.cust td { text-align: left; padding: 0.6rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); vertical-align: top; }
+  table.cust th { color: rgba(255,255,255,0.5); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; }
+  .dot { color: rgba(255,255,255,0.3); }
+  .dot--on { color: #6fe09a; }
+
+  @media (max-width: 760px) {
+    .charts { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import Chart from 'chart.js/auto';
+
+  const el = document.getElementById('statsData');
+  if (el) {
+    const d = JSON.parse(el.textContent || '{}');
+    const cream = '#e8d5bc', red = '#be3030', green = '#3a9d5d', grid = 'rgba(255,255,255,0.08)', tick = 'rgba(255,255,255,0.55)';
+    Chart.defaults.color = tick;
+    Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+    const axes = { x: { grid: { color: grid } }, y: { grid: { color: grid }, beginAtZero: true, ticks: { precision: 0 } } };
+
+    new Chart('chMonths', {
+      type: 'line',
+      data: { labels: d.monthLabels, datasets: [{ label: 'Prenotazioni', data: d.bookingsByMonth, borderColor: red, backgroundColor: 'rgba(190,48,48,0.15)', fill: true, tension: 0.3 }] },
+      options: { plugins: { legend: { display: false } }, scales: axes },
+    });
+
+    new Chart('chStatus', {
+      type: 'doughnut',
+      data: { labels: ['In attesa', 'Confermate', 'Rifiutate'], datasets: [{ data: [d.status.pending, d.status.confirmed, d.status.rejected], backgroundColor: [cream, green, red] }] },
+      options: { plugins: { legend: { position: 'bottom' } } },
+    });
+
+    new Chart('chCovers', {
+      type: 'bar',
+      data: { labels: d.monthLabels, datasets: [{ label: 'Coperti', data: d.coversByMonth, backgroundColor: cream }] },
+      options: { plugins: { legend: { display: false } }, scales: axes },
+    });
+
+    // riordino Lun → Dom (dati arrivano 0=Dom … 6=Sab)
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    const dayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    new Chart('chWeekday', {
+      type: 'bar',
+      data: { labels: dayNames, datasets: [{ label: 'Prenotazioni', data: order.map((i) => d.byWeekday[i]), backgroundColor: red }] },
+      options: { plugins: { legend: { display: false } }, scales: axes },
+    });
+
+    new Chart('chSlots', {
+      type: 'bar',
+      data: { labels: d.slotLabels, datasets: [{ label: 'Prenotazioni', data: d.slotCounts, backgroundColor: green }] },
+      options: { plugins: { legend: { display: false } }, scales: axes },
+    });
+  }
+</script>
