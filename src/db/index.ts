@@ -25,7 +25,8 @@ sqlite.exec(`
     phone TEXT NOT NULL,
     email TEXT NOT NULL,
     notes TEXT,
-    status TEXT NOT NULL DEFAULT 'pending'
+    status TEXT NOT NULL DEFAULT 'pending',
+    token TEXT
   );
   CREATE TABLE IF NOT EXISTS closures (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +40,12 @@ sqlite.exec(`
     menu_path TEXT
   );
 `);
+
+// Migrazione: aggiunge la colonna `token` ai DB creati prima di questa feature
+const cols = sqlite.prepare('PRAGMA table_info(bookings)').all() as { name: string }[];
+if (!cols.some((c) => c.name === 'token')) {
+  sqlite.exec('ALTER TABLE bookings ADD COLUMN token TEXT');
+}
 
 export const db = drizzle(sqlite, { schema });
 

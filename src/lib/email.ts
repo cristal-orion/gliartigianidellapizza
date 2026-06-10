@@ -5,6 +5,7 @@ import type { Booking } from '../db/schema';
 const apiKey = process.env.RESEND_API_KEY;
 const FROM = process.env.MAIL_FROM || 'Gli Artigiani <prenotazioni@gliartigiani.it>';
 const MANAGER = process.env.MANAGER_EMAIL || 'info@gliartigiani.it';
+const SITE_URL = (process.env.SITE_URL || 'https://gliartigiani.it').replace(/\/$/, '');
 
 const resend = apiKey ? new Resend(apiKey) : null;
 
@@ -54,12 +55,24 @@ const details = (b: Booking) => `
 
 /** Nuova richiesta: avvisa il gestore e conferma la ricezione al cliente. */
 export async function notifyNewBooking(b: Booking) {
+  const link = `${SITE_URL}/r/${b.token}`;
+  const buttons = b.token
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0"><tr>
+         <td style="padding-right:10px">
+           <a href="${link}?do=confirm" style="display:inline-block;background:#3a9d5d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:100px;font-weight:600">✓ Conferma</a>
+         </td>
+         <td>
+           <a href="${link}?do=reject" style="display:inline-block;background:#be3030;color:#fff;text-decoration:none;padding:12px 22px;border-radius:100px;font-weight:600">✗ Rifiuta</a>
+         </td>
+       </tr></table>
+       <p style="color:#888;font-size:12px">I pulsanti aprono una pagina di conferma sicura.</p>`
+    : `<p>Gestisci la richiesta dal pannello: <a href="${SITE_URL}/admin">gliartigiani.it/admin</a></p>`;
   await send(
     MANAGER,
     `Nuova richiesta di prenotazione — ${fmtDate(b.date)} ${b.time}`,
     wrap(`<h2 style="margin-top:0">Nuova richiesta da confermare</h2>${details(b)}
       <p>Email cliente: <a href="mailto:${b.email}">${b.email}</a></p>
-      <p>Gestisci la richiesta dal pannello: <a href="https://gliartigiani.it/admin">gliartigiani.it/admin</a></p>`)
+      ${buttons}`)
   );
   await send(
     b.email,

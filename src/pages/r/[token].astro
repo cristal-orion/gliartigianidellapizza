@@ -1,0 +1,114 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { eq } from 'drizzle-orm';
+import { db, schema } from '../../db';
+
+const token = Astro.params.token!;
+const booking = db.select().from(schema.bookings).where(eq(schema.bookings.token, token)).get();
+const done = Astro.url.searchParams.get('done'); // 'confirm' | 'reject' dopo l'azione
+
+const fmt = (d: string) =>
+  new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: 'Confermata', rejected: 'Rifiutata' };
+
+const showInvalid = !booking;
+const showDone = !!booking && !!done;
+const showHandled = !!booking && !done && booking.status !== 'pending';
+const showActions = !!booking && !done && booking.status === 'pending';
+---
+<Layout title="Gestione prenotazione — Gli Artigiani" noindex={true}>
+  <main class="r">
+    <div class="r__card">
+      <img src="/images/brand/logo-red.png" alt="Gli Artigiani" class="r__logo" />
+
+      {showInvalid && (
+        <div class="r__msg">
+          <h1>Link non valido</h1>
+          <p>Questa prenotazione non esiste o il link è scaduto.</p>
+        </div>
+      )}
+
+      {showDone && booking && (
+        <div class="r__msg">
+          <span class={`r__check r__check--${done}`}>{done === 'confirm' ? '✓' : '✗'}</span>
+          <h1>{done === 'confirm' ? 'Prenotazione confermata' : 'Prenotazione rifiutata'}</h1>
+          <p>Il cliente <strong>{booking.firstName} {booking.lastName}</strong> ha ricevuto la mail automatica di avviso.</p>
+        </div>
+      )}
+
+      {showHandled && booking && (
+        <div class="r__msg">
+          <h1>Richiesta già gestita</h1>
+          <p>Questa prenotazione risulta già <strong>{statusLabel[booking.status].toLowerCase()}</strong>.</p>
+        </div>
+      )}
+
+      {showActions && booking && (
+        <div>
+          <h1>Richiesta di prenotazione</h1>
+          <table class="r__details">
+            <tr><td>Data</td><td>{fmt(booking.date)}</td></tr>
+            <tr><td>Orario</td><td>{booking.time}</td></tr>
+            <tr><td>Coperti</td><td>{booking.covers}</td></tr>
+            <tr><td>Cliente</td><td>{booking.firstName} {booking.lastName}</td></tr>
+            <tr><td>Telefono</td><td><a href={`tel:${booking.phone}`}>{booking.phone}</a></td></tr>
+            <tr><td>Email</td><td><a href={`mailto:${booking.email}`}>{booking.email}</a></td></tr>
+            {booking.notes && <tr><td>Note</td><td>«{booking.notes}»</td></tr>}
+          </table>
+
+          <div class="r__actions">
+            <form method="POST" action={`/api/r/${token}`}>
+              <input type="hidden" name="action" value="confirm" />
+              <button class="ok">✓ Conferma prenotazione</button>
+            </form>
+            <form method="POST" action={`/api/r/${token}`}>
+              <input type="hidden" name="action" value="reject" />
+              <button class="warn">✗ Rifiuta</button>
+            </form>
+          </div>
+          <p class="r__hint">Confermando, al cliente parte subito la mail di conferma.</p>
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .r { min-height: 100vh; display: grid; place-items: center; padding: 2rem; }
+  .r__card {
+    width: 100%; max-width: 440px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(232,213,188,0.12);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+  .r__logo { height: 38px; margin-bottom: 1.4rem; }
+  h1 { font-family: var(--font-brand); text-transform: uppercase; font-size: 1.6rem; color: var(--cream); margin-bottom: 1rem; }
+  .r__msg p { color: rgba(255,255,255,0.7); line-height: 1.6; }
+  .r__check {
+    display: inline-grid; place-items: center;
+    width: 60px; height: 60px; border-radius: 50%;
+    font-size: 1.6rem; margin-bottom: 1rem;
+  }
+  .r__check--confirm { background: rgba(60,160,90,0.2); color: #6fe09a; }
+  .r__check--reject { background: rgba(190,48,48,0.2); color: #ff8a8a; }
+
+  .r__details { width: 100%; border-collapse: collapse; margin: 1rem 0 1.6rem; text-align: left; }
+  .r__details td { padding: 0.55rem 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 0.92rem; }
+  .r__details td:first-child { color: rgba(255,255,255,0.5); width: 90px; }
+  .r__details a { color: var(--cream); }
+
+  .r__actions { display: flex; flex-direction: column; gap: 0.7rem; }
+  button {
+    width: 100%; cursor: pointer; border: none; border-radius: 100px;
+    padding: 0.95rem; font-size: 1rem; font-weight: 600; letter-spacing: 0.04em;
+    transition: filter 0.2s ease;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.ok { background: #3a9d5d; color: #fff; }
+  button.warn { background: transparent; color: #ff8a8a; border: 1px solid rgba(255,138,138,0.4); }
+  .r__hint { color: rgba(255,255,255,0.45); font-size: 0.82rem; margin-top: 1rem; }
+</style>

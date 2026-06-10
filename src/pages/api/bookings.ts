@@ -1,4 +1,5 @@
 export const prerender = false;
+import { randomUUID } from 'node:crypto';
 import type { APIRoute } from 'astro';
 import { db, schema } from '../../db';
 import { getSettings, getClosures } from '../../lib/settings';
@@ -55,6 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
       createdAt: new Date().toISOString(),
       date, time, covers, firstName, lastName, phone, email, notes,
       status: 'pending',
+      token: randomUUID(),
     })
     .returning()
     .get();
