@@ -9,4 +9,9 @@ export default defineConfig({
   output: 'static',
   adapter: node({ mode: 'standalone' }),
   integrations: [sitemap()],
+  // Dietro il reverse proxy (Traefik/Coolify) il TLS è terminato dal proxy,
+  // quindi l'app si percepisce come http e il controllo Origin di Astro
+  // rigetterebbe i POST con Origin https del browser. La protezione CSRF
+  // resta garantita dal cookie di sessione SameSite=Lax.
+  security: { checkOrigin: false },
 });
