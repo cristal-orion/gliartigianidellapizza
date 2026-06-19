@@ -71,32 +71,14 @@ import Footer from '../components/Footer.astro';
     <div class="story__intro">
       <span class="section-tag">Hand-Stories</span>
       <p class="story__lead">
-        La pizza, fedele compagna del mio viaggio nella vita, ha segnato
-        il mio percorso fin dai primi passi e continua a farlo,
-        contribuendo alla mia crescita personale e professionale.
+        La pizza, <strong>fedele compagna del mio viaggio</strong> nella vita,
+        ha segnato il mio percorso <strong>fin dai primi passi</strong> e
+        continua a farlo, contribuendo alla mia
+        <strong>crescita personale e professionale</strong>.
       </p>
     </div>
 
     <div class="story__chapters">
-      <article class="chapter chapter--text">
-        <p>
-          Il mio ingresso nel mondo della ristorazione è avvenuto nel
-          ristorante di mia zia, ma inizialmente nel ruolo di cameriere.
-        </p>
-        <p>
-          La passione per la pizza, però, mi bruciava dentro, spingendomi
-          irresistibilmente dietro al bancone. Così, ho fatto il mio ingresso
-          in una pizzeria d'asporto, situata proprio qui accanto, che mia zia
-          aveva acquisito.
-        </p>
-        <p>
-          Con il tempo e seguendo con orgoglio la mia ambizione, sono riuscito
-          a diventare il proprietario di quella pizzeria. Questo passo ha
-          comportato fatica, sacrifici e rinunce, ma sentivo profondamente che
-          era la scelta giusta per la mia personalità e la mia dedizione.
-        </p>
-      </article>
-
       <article class="chapter chapter--photo">
         <div class="chapter__copy">
           <h3 class="chapter__title">Arte</h3>
@@ -414,7 +396,11 @@ import Footer from '../components/Footer.astro';
     font-family: var(--font-brand);
     font-size: clamp(1.6rem, 3.4vw, 2.8rem);
     line-height: 1.25;
-    color: var(--white);
+    color: rgba(255,255,255,0.72);
+  }
+  .story__lead strong {
+    font-weight: 700;
+    color: var(--cream);
   }
   .story__chapters {
     display: flex;
