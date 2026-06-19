@@ -38,7 +38,8 @@ sqlite.exec(`
     id INTEGER PRIMARY KEY,
     hours TEXT NOT NULL,
     slots TEXT NOT NULL,
-    menu_path TEXT
+    menu_path TEXT,
+    manager_email TEXT
   );
 `);
 
@@ -49,6 +50,12 @@ if (!cols.some((c) => c.name === 'token')) {
 }
 if (!cols.some((c) => c.name === 'marketing_consent')) {
   sqlite.exec('ALTER TABLE bookings ADD COLUMN marketing_consent INTEGER NOT NULL DEFAULT 0');
+}
+
+// Migrazione: email notifiche configurabile dal pannello (DB creati prima)
+const settingsCols = sqlite.prepare('PRAGMA table_info(settings)').all() as { name: string }[];
+if (!settingsCols.some((c) => c.name === 'manager_email')) {
+  sqlite.exec('ALTER TABLE settings ADD COLUMN manager_email TEXT');
 }
 
 export const db = drizzle(sqlite, { schema });

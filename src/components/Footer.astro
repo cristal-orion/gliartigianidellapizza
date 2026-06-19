@@ -119,29 +119,47 @@
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
   }
-  .footer__hours li {
+  /* :global() perché le righe vengono rigenerate via JS (orari live dal
+     pannello): senza questo gli stili scoped di Astro non le raggiungono. */
+  .footer__hours :global(li) {
     display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 0.8rem;
-    font-size: 0.86rem;
+    column-gap: 1.2rem;
+    row-gap: 0.1rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
     color: rgba(255, 255, 255, 0.72);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    padding-bottom: 0.4rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .footer__hours li span:first-child {
+  .footer__hours :global(li:last-child) {
+    border-bottom: none;
+  }
+  .footer__hours :global(li > span:first-child) {
     color: var(--cream);
+    font-weight: 600;
     white-space: nowrap;
   }
-  .footer__hours li span:last-child {
+  .footer__hours :global(li > span:last-child) {
     text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
-  .footer__hours li.is-closed span:last-child {
+  .footer__hours :global(li.is-closed > span:last-child) {
     color: var(--red);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.78rem;
+  }
+  .footer__hours :global(li.is-today) {
+    border-radius: 6px;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+    margin: 0 -0.55rem;
+    background: rgba(190, 48, 48, 0.12);
   }
   .footer__social {
     display: flex;
@@ -199,13 +217,17 @@
 
       const ul = document.getElementById('footerHours');
       if (ul && hours) {
+        const todayIdx = new Date().getDay();
         ul.innerHTML = order.map((d) => {
           const ranges = hours[d] || [];
-          if (ranges.length === 0) {
-            return `<li class="is-closed"><span>${DAYS[d]}</span><span>Chiuso</span></li>`;
-          }
-          const txt = ranges.map((r) => `${r.open}–${r.close}`).join(' · ');
-          return `<li><span>${DAYS[d]}</span><span>${txt}</span></li>`;
+          const classes = [];
+          if (ranges.length === 0) classes.push('is-closed');
+          if (d === todayIdx) classes.push('is-today');
+          const cls = classes.length ? ` class="${classes.join(' ')}"` : '';
+          const txt = ranges.length === 0
+            ? 'Chiuso'
+            : ranges.map((r) => `${r.open}–${r.close}`).join(' · ');
+          return `<li${cls}><span>${DAYS[d]}</span><span>${txt}</span></li>`;
         }).join('');
       }
 

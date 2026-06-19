@@ -98,6 +98,10 @@ const today = new Date().toISOString().slice(0, 10);
         <span class="success__check">✓</span>
         <h2>Richiesta inviata!</h2>
         <p>Grazie. Abbiamo ricevuto la tua richiesta e ti confermeremo la disponibilità via email il prima possibile.</p>
+        <p class="success__peak" id="peakNote" hidden>
+          ⏱ <strong>Venerdì e sabato</strong> sono le nostre serate di maggiore affluenza:
+          ti chiediamo di presentarti <strong>entro 15 minuti</strong> dall'orario prenotato.
+        </p>
       </div>
     </div>
 
@@ -244,6 +248,16 @@ const today = new Date().toISOString().slice(0, 10);
   }
   .success h2 { font-family: var(--font-brand); text-transform: uppercase; font-size: 1.8rem; color: var(--cream); margin-bottom: 0.6rem; }
   .success p { color: rgba(255,255,255,0.7); line-height: 1.6; max-width: 420px; margin: 0 auto; }
+  .success__peak {
+    margin: 1.2rem auto 0;
+    padding: 0.9rem 1.1rem;
+    background: rgba(190,48,48,0.12);
+    border: 1px solid rgba(190,48,48,0.35);
+    border-radius: 10px;
+    color: rgba(255,255,255,0.85) !important;
+    font-size: 0.9rem;
+  }
+  .success__peak strong { color: var(--cream); }
 
   .booking__fallback {
     text-align: center;
@@ -263,6 +277,7 @@ const today = new Date().toISOString().slice(0, 10);
   const errBox = document.getElementById('formError');
   const submitBtn = document.getElementById('submitBtn');
   const successBox = document.getElementById('successBox');
+  const peakNote = document.getElementById('peakNote');
 
   function refreshSlots() {
     const val = dateEl.value;
@@ -334,6 +349,9 @@ const today = new Date().toISOString().slice(0, 10);
       });
       const out = await res.json();
       if (!res.ok) throw new Error(out.error || 'Errore durante l’invio.');
+      // Nota finestra 15 min solo per venerdì (5) e sabato (6): giorni di più alto flusso
+      const weekday = new Date(data.date + 'T00:00:00').getDay();
+      if (peakNote && (weekday === 5 || weekday === 6)) peakNote.hidden = false;
       form.hidden = true;
       successBox.hidden = false;
       successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -1,13 +1,45 @@
 import 'dotenv/config';
 import { Resend } from 'resend';
 import type { Booking } from '../db/schema';
+import { getSettings } from './settings';
 
 const apiKey = process.env.RESEND_API_KEY;
 const FROM = process.env.MAIL_FROM || 'Gli Artigiani <prenotazioni@gliartigiani.it>';
-const MANAGER = process.env.MANAGER_EMAIL || 'info@gliartigiani.it';
+const MANAGER_FALLBACK = process.env.MANAGER_EMAIL || 'info@gliartigiani.it';
 const SITE_URL = (process.env.SITE_URL || 'https://gliartigiani.it').replace(/\/$/, '');
 
 const resend = apiKey ? new Resend(apiKey) : null;
+
+/** Destinatario notifiche: prima l'email configurata dal pannello, poi l'env, poi il default. */
+function managerEmail(): string {
+  try {
+    const configured = getSettings().managerEmail?.trim();
+    if (configured) return configured;
+  } catch {
+    /* DB non disponibile: usa il fallback */
+  }
+  return MANAGER_FALLBACK;
+}
+
+/** Venerdì (5) e sabato (6) sono le serate di maggiore affluenza. */
+function isPeakDay(date: string): boolean {
+  try {
+    const wd = new Date(date + 'T00:00:00').getDay();
+    return wd === 5 || wd === 6;
+  } catch {
+    return false;
+  }
+}
+
+/** Nota sulla finestra di 15 minuti, solo per venerdì e sabato. */
+const punctualityNote = (date: string) =>
+  isPeakDay(date)
+    ? `<p style="background:#fbeeee;border-left:3px solid #be3030;padding:12px 14px;border-radius:6px;font-size:13px;color:#0d0d0d">
+         ⏱ <strong>Venerdì e sabato</strong> sono le nostre serate di maggiore affluenza:
+         ti chiediamo di presentarti <strong>entro 15 minuti</strong> dall'orario prenotato.
+         Trascorsa questa finestra il tavolo potrebbe essere riassegnato.
+       </p>`
+    : '';
 
 async function send(to: string, subject: string, html: string) {
   if (!resend) {
@@ -68,7 +100,7 @@ export async function notifyNewBooking(b: Booking) {
        <p style="color:#888;font-size:12px">I pulsanti aprono una pagina di conferma sicura.</p>`
     : `<p>Gestisci la richiesta dal pannello: <a href="${SITE_URL}/admin">gliartigiani.it/admin</a></p>`;
   await send(
-    MANAGER,
+    managerEmail(),
     `Nuova richiesta di prenotazione — ${fmtDate(b.date)} ${b.time}`,
     wrap(`<h2 style="margin-top:0">Nuova richiesta da confermare</h2>${details(b)}
       <p>Email cliente: <a href="mailto:${b.email}">${b.email}</a></p>
@@ -80,6 +112,7 @@ export async function notifyNewBooking(b: Booking) {
     wrap(`<h2 style="margin-top:0">Grazie ${b.firstName}!</h2>
       <p>Abbiamo ricevuto la tua richiesta di prenotazione. Ti confermeremo a breve la disponibilità.</p>
       ${details(b)}
+      ${punctualityNote(b.date)}
       <p style="color:#888;font-size:13px">Questa è una richiesta, non ancora una conferma. Riceverai un'altra email appena il tavolo sarà confermato.</p>`)
   );
 }
@@ -92,7 +125,7 @@ export async function notifyConfirmed(b: Booking) {
     wrap(`<h2 style="margin-top:0;color:#be3030">Tavolo confermato ✓</h2>
       <p>Ciao ${b.firstName}, la tua prenotazione è confermata. Ti aspettiamo!</p>
       ${details(b)}
-      <p style="color:#888;font-size:13px">Ti chiediamo di presentarti entro 15 minuti dall'orario prenotato.</p>`)
+      ${punctualityNote(b.date)}`)
   );
 }
 

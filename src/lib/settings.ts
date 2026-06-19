@@ -11,6 +11,7 @@ export function getSettings() {
     hours: JSON.parse(row.hours) as WeekHours,
     slots: JSON.parse(row.slots) as WeekSlots,
     menuPath: row.menuPath as string | null,
+    managerEmail: row.managerEmail as string | null,
   };
 }
 
@@ -24,6 +25,11 @@ export function updateSlots(slots: WeekSlots) {
 
 export function setMenuPath(path: string) {
   db.update(schema.settings).set({ menuPath: path }).where(eq(schema.settings.id, 1)).run();
+}
+
+/** Email che riceve le notifiche di prenotazione. null = usa il fallback su MANAGER_EMAIL. */
+export function updateManagerEmail(email: string | null) {
+  db.update(schema.settings).set({ managerEmail: email }).where(eq(schema.settings.id, 1)).run();
 }
 
 export function getClosures() {

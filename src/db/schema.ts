@@ -28,11 +28,13 @@ export const closures = sqliteTable('closures', {
 //  - hours: orari di apertura per il footer  { "0".."6": [{open,close}, ...] }
 //  - slots: orari prenotabili per il modulo   { "0".."6": ["19:30", ...] }
 //  - menuPath: percorso del PDF menù caricato (null = usa quello di default)
+//  - managerEmail: indirizzo notifiche prenotazioni (null = fallback su MANAGER_EMAIL)
 export const settings = sqliteTable('settings', {
   id: integer('id').primaryKey(),
   hours: text('hours').notNull(),
   slots: text('slots').notNull(),
   menuPath: text('menu_path'),
+  managerEmail: text('manager_email'),
 });
 
 export type Booking = typeof bookings.$inferSelect;

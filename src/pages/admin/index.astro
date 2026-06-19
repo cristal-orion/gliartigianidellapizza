@@ -3,18 +3,76 @@ export const prerender = false;
 import Layout from '../../layouts/Layout.astro';
 import { isValidSession, SESSION_COOKIE } from '../../lib/auth';
 import { db, schema } from '../../db';
-import { desc } from 'drizzle-orm';
+import { and, or, eq, lt, lte, gte, like, asc, desc, count } from 'drizzle-orm';
 import { getSettings, getClosures, DAYS_IT } from '../../lib/settings';
 
 if (!isValidSession(Astro.cookies.get(SESSION_COOKIE)?.value)) {
   return Astro.redirect('/admin/login');
 }
 
-const bookings = db.select().from(schema.bookings).orderBy(desc(schema.bookings.createdAt)).all();
-const pending = bookings.filter((b) => b.status === 'pending');
-const handled = bookings.filter((b) => b.status !== 'pending');
-const { hours, slots, menuPath } = getSettings();
+const B = schema.bookings;
+const todayISO = new Date().toISOString().slice(0, 10);
+
+// 1) Richieste da confermare — le più imminenti per prime
+const pending = db.select().from(B)
+  .where(eq(B.status, 'pending'))
+  .orderBy(asc(B.date), asc(B.time)).all();
+
+// 2) Prossime prenotazioni confermate (data ≥ oggi) — la lista operativa
+const upcoming = db.select().from(B)
+  .where(and(eq(B.status, 'confirmed'), gte(B.date, todayISO)))
+  .orderBy(asc(B.date), asc(B.time)).all();
+
+// 3) Archivio = prenotazioni passate (qualsiasi stato) + tutte le rifiutate, con filtri
+const params = Astro.url.searchParams;
+const fStato = params.get('stato') || '';          // '', 'confirmed', 'rejected'
+const fQuery = (params.get('q') || '').trim();
+const fDal = params.get('dal') || '';
+const fAl = params.get('al') || '';
+const hasFilters = !!(fStato || fQuery || fDal || fAl);
+
+const PAGE_SIZE = 25;
+const reqPage = parseInt(params.get('page') || '1', 10);
+const page = Number.isFinite(reqPage) && reqPage > 0 ? reqPage : 1;
+
+// Archivio: confermate passate + rifiutate (qualsiasi data). Le pending restano solo tra le richieste.
+const archiveConds: any[] = [
+  or(eq(B.status, 'rejected'), and(eq(B.status, 'confirmed'), lt(B.date, todayISO))),
+];
+if (fStato === 'confirmed' || fStato === 'rejected') archiveConds.push(eq(B.status, fStato));
+if (fDal) archiveConds.push(gte(B.date, fDal));
+if (fAl) archiveConds.push(lte(B.date, fAl));
+if (fQuery) {
+  const like_ = `%${fQuery}%`;
+  archiveConds.push(or(
+    like(B.firstName, like_), like(B.lastName, like_),
+    like(B.phone, like_), like(B.email, like_),
+  ));
+}
+const archiveWhere = and(...archiveConds);
+const archiveTotal = db.select({ c: count() }).from(B).where(archiveWhere).get()?.c ?? 0;
+const pageCount = Math.max(1, Math.ceil(archiveTotal / PAGE_SIZE));
+const safePage = Math.min(page, pageCount);
+const archive = db.select().from(B).where(archiveWhere)
+  .orderBy(desc(B.date), desc(B.time))
+  .limit(PAGE_SIZE).offset((safePage - 1) * PAGE_SIZE).all();
+
+// Link di paginazione che conservano i filtri attivi
+const pageUrl = (p: number) => {
+  const u = new URLSearchParams();
+  if (fStato) u.set('stato', fStato);
+  if (fQuery) u.set('q', fQuery);
+  if (fDal) u.set('dal', fDal);
+  if (fAl) u.set('al', fAl);
+  u.set('page', String(p));
+  return `/admin?${u.toString()}#archivio`;
+};
+
+const { hours, slots, menuPath, managerEmail } = getSettings();
 const closures = getClosures();
+// Email effettiva: quella salvata nel pannello, altrimenti il fallback da env.
+const fallbackEmail = process.env.MANAGER_EMAIL || 'info@gliartigiani.it';
+const activeEmail = managerEmail?.trim() || fallbackEmail;
 
 // ordine di visualizzazione: Lun → Dom
 const dayOrder = [1, 2, 3, 4, 5, 6, 0];
@@ -24,6 +82,8 @@ const error = Astro.url.searchParams.get('error');
 
 const fmt = (d: string) =>
   new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtFull = (d: string) =>
+  new Date(d + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 const rangesToText = (rs: { open: string; close: string }[]) => rs.map((r) => `${r.open}-${r.close}`).join(', ');
 const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: 'Confermata', rejected: 'Rifiutata' };
 ---
@@ -43,7 +103,7 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
     {saved && <p class="flash flash--ok">Modifiche salvate ✓</p>}
     {error && <p class="flash flash--err">Si è verificato un errore. Riprova.</p>}
 
-    <!-- ===== PRENOTAZIONI ===== -->
+    <!-- ===== RICHIESTE DA CONFERMARE ===== -->
     <section class="panel">
       <h2>Richieste da confermare {pending.length > 0 && <span class="badge">{pending.length}</span>}</h2>
       {pending.length === 0 && <p class="muted">Nessuna richiesta in attesa.</p>}
@@ -72,20 +132,28 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
           </article>
         ))}
       </div>
+    </section>
 
-      {handled.length > 0 && (
-        <details class="history">
-          <summary>Storico prenotazioni ({handled.length})</summary>
+    <!-- ===== PROSSIME PRENOTAZIONI CONFERMATE ===== -->
+    <section class="panel">
+      <h2>Prossime prenotazioni {upcoming.length > 0 && <span class="badge badge--ok">{upcoming.length}</span>}</h2>
+      {upcoming.length === 0 ? (
+        <p class="muted">Nessuna prenotazione confermata in arrivo.</p>
+      ) : (
+        <div class="table-wrap">
           <table>
-            <thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cop.</th><th>Stato</th><th></th></tr></thead>
+            <thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cop.</th><th></th></tr></thead>
             <tbody>
-              {handled.map((b) => (
+              {upcoming.map((b) => (
                 <tr>
                   <td>{fmt(b.date)}</td>
                   <td>{b.time}</td>
-                  <td>{b.firstName} {b.lastName}<br /><small class="muted">{b.phone}</small></td>
+                  <td>
+                    {b.firstName} {b.lastName}<br />
+                    <small class="muted"><a href={`tel:${b.phone}`}>{b.phone}</a></small>
+                    {b.notes && <small class="bcard__notes"> · “{b.notes}”</small>}
+                  </td>
                   <td>{b.covers}</td>
-                  <td><span class={`pill pill--${b.status}`}>{statusLabel[b.status]}</span></td>
                   <td>
                     <form method="POST" action="/api/admin/booking" onsubmit="return confirm('Eliminare questa prenotazione?')">
                       <input type="hidden" name="id" value={b.id} />
@@ -97,8 +165,78 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
               ))}
             </tbody>
           </table>
-        </details>
+        </div>
       )}
+    </section>
+
+    <!-- ===== ARCHIVIO ===== -->
+    <section class="panel" id="archivio">
+      <h2>Archivio prenotazioni</h2>
+      <p class="muted">Prenotazioni passate e richieste rifiutate. Usa i filtri per trovarne una.</p>
+      <form method="GET" action="/admin" class="filters">
+        <select name="stato" aria-label="Stato">
+          <option value="" selected={fStato === ''}>Tutti gli stati</option>
+          <option value="confirmed" selected={fStato === 'confirmed'}>Confermate</option>
+          <option value="rejected" selected={fStato === 'rejected'}>Rifiutate</option>
+        </select>
+        <label class="filters__date">Dal <input type="date" name="dal" value={fDal} /></label>
+        <label class="filters__date">Al <input type="date" name="al" value={fAl} /></label>
+        <input type="search" name="q" value={fQuery} placeholder="Cerca nome, telefono o email" />
+        <button class="ok">Filtra</button>
+        {hasFilters && <a href="/admin#archivio" class="ghost ghost--sm">Azzera</a>}
+      </form>
+
+      {archiveTotal === 0 ? (
+        <p class="muted">{hasFilters ? 'Nessun risultato per i filtri scelti.' : 'Nessuna prenotazione in archivio.'}</p>
+      ) : (
+        <Fragment>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cop.</th><th>Stato</th><th></th></tr></thead>
+              <tbody>
+                {archive.map((b) => (
+                  <tr>
+                    <td>{fmtFull(b.date)}</td>
+                    <td>{b.time}</td>
+                    <td>{b.firstName} {b.lastName}<br /><small class="muted">{b.phone}</small></td>
+                    <td>{b.covers}</td>
+                    <td><span class={`pill pill--${b.status}`}>{statusLabel[b.status]}</span></td>
+                    <td>
+                      <form method="POST" action="/api/admin/booking" onsubmit="return confirm('Eliminare questa prenotazione?')">
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="action" value="delete" />
+                        <button class="link-del">Elimina</button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {pageCount > 1 && (
+            <nav class="pager">
+              {safePage > 1
+                ? <a href={pageUrl(safePage - 1)}>‹ Precedenti</a>
+                : <span class="pager__off">‹ Precedenti</span>}
+              <span class="pager__info">Pagina {safePage} di {pageCount} · {archiveTotal} in totale</span>
+              {safePage < pageCount
+                ? <a href={pageUrl(safePage + 1)}>Successive ›</a>
+                : <span class="pager__off">Successive ›</span>}
+            </nav>
+          )}
+        </Fragment>
+      )}
+    </section>
+
+    <!-- ===== EMAIL NOTIFICHE ===== -->
+    <section class="panel">
+      <h2>Email notifiche prenotazioni</h2>
+      <p class="muted">Indirizzo a cui arrivano le nuove richieste (con i pulsanti Conferma/Rifiuta). Lascia vuoto per usare il valore di default configurato sul server.</p>
+      <form method="POST" action="/api/admin/notifications" class="notif">
+        <input type="email" name="managerEmail" value={managerEmail ?? ''} placeholder="nome@esempio.it" autocomplete="email" />
+        <button class="ok">Salva email</button>
+      </form>
+      <p class="muted" style="margin-bottom:0">Attualmente le notifiche arrivano a: <strong style="color:var(--cream)">{activeEmail}</strong>{!managerEmail?.trim() && <span> (default dal server)</span>}</p>
     </section>
 
     <!-- ===== ORARI & SLOT ===== -->
@@ -192,6 +330,7 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
     display: flex; align-items: center; gap: 0.6rem;
   }
   .badge { background: var(--red); color: #fff; font-family: var(--font-body); font-size: 0.8rem; border-radius: 100px; padding: 0.1rem 0.6rem; }
+  .badge--ok { background: #3a9d5d; }
   .muted { color: rgba(255,255,255,0.5); font-size: 0.88rem; margin-bottom: 0.8rem; }
 
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 1rem; }
@@ -217,21 +356,32 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
   button.wide { width: 100%; margin-top: 1rem; padding: 0.8rem; }
   .link-del { background: none; color: rgba(255,138,138,0.8); padding: 0; font-size: 0.8rem; }
 
-  .history { margin-top: 1.4rem; }
-  .history summary { cursor: pointer; color: var(--cream); font-size: 0.9rem; }
   table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.85rem; }
   th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
   th { color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.06em; }
   .pill { padding: 0.15rem 0.6rem; border-radius: 100px; font-size: 0.75rem; }
   .pill--confirmed { background: rgba(60,160,90,0.2); color: #6fe09a; }
   .pill--rejected { background: rgba(190,48,48,0.2); color: #ff8a8a; }
+  .table-wrap { overflow-x: auto; }
+
+  .filters { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin: 0.4rem 0 0.6rem; }
+  .filters__date { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: rgba(255,255,255,0.5); white-space: nowrap; }
+  .filters__date input[type=date] { width: auto; }
+  .filters input[type=search] { flex: 1; min-width: 200px; }
+  .ghost--sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+
+  .pager { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1rem; font-size: 0.85rem; flex-wrap: wrap; }
+  .pager a { color: var(--cream); text-decoration: none; border: 1px solid rgba(232,213,188,0.25); border-radius: 100px; padding: 0.4rem 0.9rem; }
+  .pager a:hover { border-color: var(--red); }
+  .pager__off { color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 100px; padding: 0.4rem 0.9rem; }
+  .pager__info { color: rgba(255,255,255,0.5); }
 
   .sched__head, .sched__row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 0.7rem; align-items: center; }
   .sched__head { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.45); margin-bottom: 0.6rem; }
   .sched__row { margin-bottom: 0.5rem; }
   .sched__day { color: var(--cream); font-size: 0.9rem; }
 
-  input[type=text], input[type=date], input[type=file] {
+  input[type=text], input[type=date], input[type=file], input[type=email], input[type=search], select {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 8px;
@@ -240,8 +390,12 @@ const statusLabel: Record<string, string> = { pending: 'In attesa', confirmed: '
     font-size: 0.9rem;
     width: 100%;
   }
-  input:focus { outline: none; border-color: var(--red); }
+  select { width: auto; cursor: pointer; }
+  select option { background: #1a1a1a; color: var(--white); }
+  input:focus, select:focus { outline: none; border-color: var(--red); }
 
+  .notif { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.9rem; }
+  .notif input[type=email] { flex: 1; min-width: 220px; }
   .closure-add, .menu-up { display: flex; gap: 0.7rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
   .closure-add input[type=date] { width: auto; }
   .closure-add input[type=text] { flex: 1; min-width: 180px; }
